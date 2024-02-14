@@ -2,7 +2,6 @@
 
 MAKEFLAGS += --silent
 
-
 api:
 	go run cmd/api/local_main.go
 
