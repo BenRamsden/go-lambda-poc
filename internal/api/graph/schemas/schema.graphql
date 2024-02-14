@@ -1,0 +1,24 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+type Me {
+  id: ID!
+  name: String!
+  email: String!
+}
+
+input Pagination {
+  total: Int!
+  limit: Int!
+  cursor: String
+}
+
+type Query {
+  me: Me!
+}
+
+type Mutation {
+  empty: Boolean
+}
+

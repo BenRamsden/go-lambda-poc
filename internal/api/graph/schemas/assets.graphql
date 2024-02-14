@@ -1,0 +1,47 @@
+type Asset {
+  ID: ID!
+  Name: String!
+  Description: String!
+  URI: String!
+  CreatedAt: String!
+  UpdatedAt: String!
+}
+
+extend type Query {
+  assets(pagination: Pagination): [Asset!]!
+  asset(id: ID!): Asset
+}
+
+input NewAsset {
+  Name: String!
+  Description: String!
+}
+
+type NewAssetResponse {
+  Asset: Asset!
+  PresignedURL: PresignedURL!
+}
+
+type Header {
+  Key: String!
+  Value: String!
+}
+
+type PresignedURL {
+  URL: String!
+  Fields: [Header!]!
+}
+
+input UpdateAsset {
+  ID: ID!
+  Name: String
+  Description: String
+}
+
+extend type Mutation {
+  createAsset(input: NewAsset!): NewAssetResponse!
+  updateAsset(input: UpdateAsset!): Asset!
+  deleteAsset(id: ID!): Boolean!
+  uploadAsset(id: ID!): PresignedURL!
+}
+
