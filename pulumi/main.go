@@ -16,6 +16,7 @@ func main() {
 
 		pulumi.Printf("Bucket name: %s\n", bucket.ID())
 		pulumi.Printf("Invocation URL: %s\n", invocationUrl)
+		pulumi.Printf("Website URL: %s\n", bucket.WebsiteEndpoint)
 
 		return nil
 	})
