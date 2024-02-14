@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	jwtmiddleware "github.com/auth0/go-jwt-middleware/v2"
@@ -18,6 +19,17 @@ import (
 // CustomClaims contains custom data we want from the token.
 type CustomClaims struct {
 	Scope string `json:"scope"`
+}
+
+func (c CustomClaims) HasScope(expectedScope string) bool {
+	result := strings.Split(c.Scope, " ")
+	for i := range result {
+		if result[i] == expectedScope {
+			return true
+		}
+	}
+
+	return false
 }
 
 // Validate does nothing for this example, but we need
@@ -43,7 +55,9 @@ func EnsureValidToken() gin.HandlerFunc {
 		[]string{env.AUTH0_AUDIENCE},
 		validator.WithCustomClaims(
 			func() validator.CustomClaims {
-				return &CustomClaims{}
+				return &CustomClaims{
+					// Scopes: []string{"read:users", "create:users", "update:users", "read:users_app_metadata", "update:users_app_metadata", "create:users_app_metadata", "create:user_tickets"},
+				}
 			},
 		),
 		validator.WithAllowedClockSkew(time.Minute),
@@ -53,7 +67,7 @@ func EnsureValidToken() gin.HandlerFunc {
 	}
 
 	errorHandler := func(w http.ResponseWriter, r *http.Request, err error) {
-		log.Printf("Encountered error while validating JWT: %v", err)
+		log.Printf("\n\nEncountered error while validating JWT:\n\t%v\n\n", err)
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusUnauthorized)

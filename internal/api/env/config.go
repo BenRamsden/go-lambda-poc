@@ -13,7 +13,6 @@ var (
 	AUTH0_DOMAIN        string = ""
 	AUTH0_ISSUER_URL    string = ""
 	AUTH0_WEB_CLIENT_ID string = ""
-	AUTH0_WEB_DOMAIN    string = ""
 	AUTH0_CLIENT_SECRET string = ""
 )
 
@@ -27,6 +26,5 @@ func init() {
 	AUTH0_DOMAIN = os.Getenv("AUTH0_DOMAIN")
 	AUTH0_ISSUER_URL = os.Getenv("AUTH0_ISSUER_URL")
 	AUTH0_WEB_CLIENT_ID = os.Getenv("AUTH0_WEB_CLIENT_ID")
-	AUTH0_WEB_DOMAIN = os.Getenv("AUTH0_WEB_DOMAIN")
 	AUTH0_CLIENT_SECRET = os.Getenv("AUTH0_CLIENT_SECRET")
 }

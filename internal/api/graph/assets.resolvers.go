@@ -11,17 +11,6 @@ import (
 	"github.com/jugo-io/go-poc/internal/api/model"
 )
 
-func ConvertAsset(a model.Asset) Asset {
-	return Asset{
-		ID:          a.ID,
-		Name:        a.Name,
-		Description: a.Description,
-		URI:         a.URI,
-		CreatedAt:   a.CreatedAt,
-		UpdatedAt:   a.UpdatedAt,
-	}
-}
-
 // CreateAsset is the resolver for the createAsset field.
 func (r *mutationResolver) CreateAsset(ctx context.Context, input NewAsset) (Asset, error) {
 	asset, err := r.AssetService.CreateAsset(ctx, model.NewAsset{

@@ -8,7 +8,6 @@ import (
 	"context"
 
 	"github.com/aws/smithy-go/ptr"
-	"github.com/jugo-io/go-poc/internal/api/model"
 )
 
 // Empty is the resolver for the empty field.
@@ -29,17 +28,3 @@ func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
-
-func P(pagination *Pagination) model.Pagination {
-	if pagination == nil {
-		return model.Pagination{
-			Count: 10,
-			Page:  0,
-		}
-	}
-
-	return model.Pagination{
-		Count: pagination.Count,
-		Page:  pagination.Page,
-	}
-}

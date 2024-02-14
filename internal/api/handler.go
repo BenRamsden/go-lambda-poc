@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jugo-io/go-poc/internal/api/auth"
 	"github.com/jugo-io/go-poc/internal/api/graph"
 	"github.com/jugo-io/go-poc/internal/api/model"
 	"github.com/jugo-io/go-poc/internal/api/sql"
@@ -37,7 +38,7 @@ func Handler(options HandlerOptions) *gin.Engine {
 	}
 
 	r.GET("/", gin.WrapH(playground.Handler("GraphQL playground", "/graphql")))
-	r.POST("/graphql", gin.WrapH(handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))))
+	r.POST("/graphql", auth.EnsureValidToken(), gin.WrapH(handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))))
 
 	return r
 }
