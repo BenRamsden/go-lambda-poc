@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
@@ -74,11 +75,6 @@ type ComplexityRoot struct {
 		UploadAsset func(childComplexity int, id string) int
 	}
 
-	NewAssetResponse struct {
-		Asset        func(childComplexity int) int
-		PresignedURL func(childComplexity int) int
-	}
-
 	PresignedURL struct {
 		Fields func(childComplexity int) int
 		URL    func(childComplexity int) int
@@ -93,7 +89,7 @@ type ComplexityRoot struct {
 
 type MutationResolver interface {
 	Empty(ctx context.Context) (*bool, error)
-	CreateAsset(ctx context.Context, input NewAsset) (NewAssetResponse, error)
+	CreateAsset(ctx context.Context, input NewAsset) (Asset, error)
 	UpdateAsset(ctx context.Context, input UpdateAsset) (Asset, error)
 	DeleteAsset(ctx context.Context, id string) (bool, error)
 	UploadAsset(ctx context.Context, id string) (PresignedURL, error)
@@ -254,20 +250,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.UploadAsset(childComplexity, args["id"].(string)), true
-
-	case "NewAssetResponse.Asset":
-		if e.complexity.NewAssetResponse.Asset == nil {
-			break
-		}
-
-		return e.complexity.NewAssetResponse.Asset(childComplexity), true
-
-	case "NewAssetResponse.PresignedURL":
-		if e.complexity.NewAssetResponse.PresignedURL == nil {
-			break
-		}
-
-		return e.complexity.NewAssetResponse.PresignedURL(childComplexity), true
 
 	case "PresignedURL.Fields":
 		if e.complexity.PresignedURL.Fields == nil {
@@ -787,9 +769,9 @@ func (ec *executionContext) _Asset_CreatedAt(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(time.Time)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Asset_CreatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -799,7 +781,7 @@ func (ec *executionContext) fieldContext_Asset_CreatedAt(ctx context.Context, fi
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type Time does not have child fields")
 		},
 	}
 	return fc, nil
@@ -831,9 +813,9 @@ func (ec *executionContext) _Asset_UpdatedAt(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(time.Time)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Asset_UpdatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -843,7 +825,7 @@ func (ec *executionContext) fieldContext_Asset_UpdatedAt(ctx context.Context, fi
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type Time does not have child fields")
 		},
 	}
 	return fc, nil
@@ -1136,9 +1118,9 @@ func (ec *executionContext) _Mutation_createAsset(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.(NewAssetResponse)
+	res := resTmp.(Asset)
 	fc.Result = res
-	return ec.marshalNNewAssetResponse2githubᚗcomᚋjugoᚑioᚋgoᚑpocᚋinternalᚋapiᚋgraphᚐNewAssetResponse(ctx, field.Selections, res)
+	return ec.marshalNAsset2githubᚗcomᚋjugoᚑioᚋgoᚑpocᚋinternalᚋapiᚋgraphᚐAsset(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_createAsset(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1149,12 +1131,20 @@ func (ec *executionContext) fieldContext_Mutation_createAsset(ctx context.Contex
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "Asset":
-				return ec.fieldContext_NewAssetResponse_Asset(ctx, field)
-			case "PresignedURL":
-				return ec.fieldContext_NewAssetResponse_PresignedURL(ctx, field)
+			case "ID":
+				return ec.fieldContext_Asset_ID(ctx, field)
+			case "Name":
+				return ec.fieldContext_Asset_Name(ctx, field)
+			case "Description":
+				return ec.fieldContext_Asset_Description(ctx, field)
+			case "URI":
+				return ec.fieldContext_Asset_URI(ctx, field)
+			case "CreatedAt":
+				return ec.fieldContext_Asset_CreatedAt(ctx, field)
+			case "UpdatedAt":
+				return ec.fieldContext_Asset_UpdatedAt(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type NewAssetResponse", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Asset", field.Name)
 		},
 	}
 	defer func() {
@@ -1352,114 +1342,6 @@ func (ec *executionContext) fieldContext_Mutation_uploadAsset(ctx context.Contex
 	if fc.Args, err = ec.field_Mutation_uploadAsset_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _NewAssetResponse_Asset(ctx context.Context, field graphql.CollectedField, obj *NewAssetResponse) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_NewAssetResponse_Asset(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Asset, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(Asset)
-	fc.Result = res
-	return ec.marshalNAsset2githubᚗcomᚋjugoᚑioᚋgoᚑpocᚋinternalᚋapiᚋgraphᚐAsset(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_NewAssetResponse_Asset(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "NewAssetResponse",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "ID":
-				return ec.fieldContext_Asset_ID(ctx, field)
-			case "Name":
-				return ec.fieldContext_Asset_Name(ctx, field)
-			case "Description":
-				return ec.fieldContext_Asset_Description(ctx, field)
-			case "URI":
-				return ec.fieldContext_Asset_URI(ctx, field)
-			case "CreatedAt":
-				return ec.fieldContext_Asset_CreatedAt(ctx, field)
-			case "UpdatedAt":
-				return ec.fieldContext_Asset_UpdatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Asset", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _NewAssetResponse_PresignedURL(ctx context.Context, field graphql.CollectedField, obj *NewAssetResponse) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_NewAssetResponse_PresignedURL(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.PresignedURL, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(PresignedURL)
-	fc.Result = res
-	return ec.marshalNPresignedURL2githubᚗcomᚋjugoᚑioᚋgoᚑpocᚋinternalᚋapiᚋgraphᚐPresignedURL(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_NewAssetResponse_PresignedURL(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "NewAssetResponse",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "URL":
-				return ec.fieldContext_PresignedURL_URL(ctx, field)
-			case "Fields":
-				return ec.fieldContext_PresignedURL_Fields(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type PresignedURL", field.Name)
-		},
 	}
 	return fc, nil
 }
@@ -3688,34 +3570,27 @@ func (ec *executionContext) unmarshalInputPagination(ctx context.Context, obj in
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"total", "limit", "cursor"}
+	fieldsInOrder := [...]string{"count", "page"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "total":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("total"))
+		case "count":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("count"))
 			data, err := ec.unmarshalNInt2int(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.Total = data
-		case "limit":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+			it.Count = data
+		case "page":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("page"))
 			data, err := ec.unmarshalNInt2int(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.Limit = data
-		case "cursor":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cursor"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Cursor = data
+			it.Page = data
 		}
 	}
 
@@ -3976,50 +3851,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_uploadAsset(ctx, field)
 			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var newAssetResponseImplementors = []string{"NewAssetResponse"}
-
-func (ec *executionContext) _NewAssetResponse(ctx context.Context, sel ast.SelectionSet, obj *NewAssetResponse) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, newAssetResponseImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("NewAssetResponse")
-		case "Asset":
-			out.Values[i] = ec._NewAssetResponse_Asset(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "PresignedURL":
-			out.Values[i] = ec._NewAssetResponse_PresignedURL(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -4679,10 +4510,6 @@ func (ec *executionContext) unmarshalNNewAsset2githubᚗcomᚋjugoᚑioᚋgoᚑp
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNNewAssetResponse2githubᚗcomᚋjugoᚑioᚋgoᚑpocᚋinternalᚋapiᚋgraphᚐNewAssetResponse(ctx context.Context, sel ast.SelectionSet, v NewAssetResponse) graphql.Marshaler {
-	return ec._NewAssetResponse(ctx, sel, &v)
-}
-
 func (ec *executionContext) marshalNPresignedURL2githubᚗcomᚋjugoᚑioᚋgoᚑpocᚋinternalᚋapiᚋgraphᚐPresignedURL(ctx context.Context, sel ast.SelectionSet, v PresignedURL) graphql.Marshaler {
 	return ec._PresignedURL(ctx, sel, &v)
 }
@@ -4694,6 +4521,21 @@ func (ec *executionContext) unmarshalNString2string(ctx context.Context, v inter
 
 func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
 	res := graphql.MarshalString(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
+	res, err := graphql.UnmarshalTime(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
+	res := graphql.MarshalTime(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")

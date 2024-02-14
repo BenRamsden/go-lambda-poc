@@ -5,24 +5,35 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jugo-io/go-poc/internal/api/graph"
+	"github.com/jugo-io/go-poc/internal/api/model"
+	"github.com/jugo-io/go-poc/internal/api/sql"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 )
 
 type HandlerOptions struct {
+	Repo sql.Repository
 }
 
 func Handler(options HandlerOptions) *gin.Engine {
+	if options.Repo == nil {
+		panic("missing options.repo")
+	}
+
 	r := gin.Default()
+	r.Use(gin.Recovery())
+
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "pong",
 		})
 	})
 
+	assetService := model.NewAssetService(options.Repo)
+
 	resolver := &graph.Resolver{
-		// TODO: Dependency Injection
+		AssetService: assetService,
 	}
 
 	r.GET("/", gin.WrapH(playground.Handler("GraphQL playground", "/graphql")))

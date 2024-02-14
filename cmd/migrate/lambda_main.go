@@ -3,17 +3,16 @@
 package main
 
 import (
+	"context"
 	"os"
 
 	"github.com/aws/aws-lambda-go/lambda"
-	ginadapter "github.com/awslabs/aws-lambda-go-api-proxy/gin"
-	"github.com/jugo-io/go-poc/internal/api"
 	"github.com/jugo-io/go-poc/internal/api/sql"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
-func main() {
+func HandleRequest(ctx context.Context) error {
 	dsn := os.Getenv("DSN")
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
@@ -21,11 +20,12 @@ func main() {
 	}
 
 	repo := sql.NewSQLRepository(db)
-
-	options := api.HandlerOptions{
-		Repo: repo,
+	if err := repo.Migrate(); err != nil {
+		return err
 	}
+	return nil
+}
 
-	adapter := ginadapter.NewV2(api.Handler(options))
-	lambda.Start(adapter.ProxyWithContext)
+func main() {
+	lambda.Start(HandleRequest)
 }

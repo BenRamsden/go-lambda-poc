@@ -2,6 +2,8 @@
 #
 # https://gqlgen.com/getting-started/
 
+scalar Time
+
 type Me {
   id: ID!
   name: String!
@@ -9,9 +11,8 @@ type Me {
 }
 
 input Pagination {
-  total: Int!
-  limit: Int!
-  cursor: String
+  count: Int!
+  page: Int!
 }
 
 type Query {

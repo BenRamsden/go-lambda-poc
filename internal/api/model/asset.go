@@ -37,7 +37,7 @@ type AssetRepository interface {
 	DeleteAsset(context context.Context, id string) error
 
 	GetAsset(context context.Context, id string) (Asset, error)
-	GetAssets(context context.Context, pagnation Pagination) ([]Asset, error)
+	GetAssets(context context.Context, pagination Pagination) ([]Asset, error)
 }
 
 type AssetService interface {
@@ -47,5 +47,5 @@ type AssetService interface {
 	UploadAsset(context context.Context, id string) (PresignedURL, error)
 
 	GetAsset(context context.Context, id string) (Asset, error)
-	GetAssets(context context.Context, pagnation Pagination) ([]Asset, error)
+	GetAssets(context context.Context, pagination Pagination) ([]Asset, error)
 }

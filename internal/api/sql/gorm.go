@@ -14,18 +14,19 @@ type Repository interface {
 }
 
 type repository struct {
-	DB *gorm.DB
+	*gorm.DB
 }
 
 func NewSQLRepository(db *gorm.DB) Repository {
-	return &repository{DB: db}
+	return &repository{db}
 }
 
 // Migrate implements Repository.
-func (*repository) Migrate() error {
-	panic("unimplemented")
+func (r *repository) Migrate() error {
+	return r.AutoMigrate(&Asset{})
 }
 
+// Base UUID model
 type UUIDModel struct {
 	ID        string `gorm:"primarykey"`
 	CreatedAt time.Time
@@ -44,4 +45,22 @@ func (m *UUIDModel) BeforeCreate(tx *gorm.DB) error {
 func (m *UUIDModel) BeforeUpdate(tx *gorm.DB) error {
 	m.UpdatedAt = time.Now()
 	return nil
+}
+
+// Pagination
+
+func P(pagination model.Pagination) func(*gorm.DB) *gorm.DB {
+	return func(tx *gorm.DB) *gorm.DB {
+		var page, count int = 0, 10
+		if pagination.Page > 0 {
+			page = pagination.Page
+		}
+
+		if pagination.Count > 0 && pagination.Count < 100 {
+			count = pagination.Count
+		}
+
+		return tx.Limit(count).Offset(page * count)
+	}
+
 }

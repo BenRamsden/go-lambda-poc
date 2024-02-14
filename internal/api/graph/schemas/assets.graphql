@@ -3,8 +3,8 @@ type Asset {
   Name: String!
   Description: String!
   URI: String!
-  CreatedAt: String!
-  UpdatedAt: String!
+  CreatedAt: Time!
+  UpdatedAt: Time!
 }
 
 extend type Query {
@@ -15,11 +15,6 @@ extend type Query {
 input NewAsset {
   Name: String!
   Description: String!
-}
-
-type NewAssetResponse {
-  Asset: Asset!
-  PresignedURL: PresignedURL!
 }
 
 type Header {
@@ -39,7 +34,7 @@ input UpdateAsset {
 }
 
 extend type Mutation {
-  createAsset(input: NewAsset!): NewAssetResponse!
+  createAsset(input: NewAsset!): Asset!
   updateAsset(input: UpdateAsset!): Asset!
   deleteAsset(id: ID!): Boolean!
   uploadAsset(id: ID!): PresignedURL!
