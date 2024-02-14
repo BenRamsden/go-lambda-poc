@@ -5,7 +5,6 @@ package graph
 import (
 	"bytes"
 	"context"
-	"embed"
 	"errors"
 	"fmt"
 	"strconv"
@@ -403,20 +402,76 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 	return introspection.WrapTypeFromDef(ec.Schema(), ec.Schema().Types[name]), nil
 }
 
-//go:embed "schemas/assets.graphql" "schemas/schema.graphql"
-var sourcesFS embed.FS
-
-func sourceData(filename string) string {
-	data, err := sourcesFS.ReadFile(filename)
-	if err != nil {
-		panic(fmt.Sprintf("codegen problem: %s not available", filename))
-	}
-	return string(data)
+var sources = []*ast.Source{
+	{Name: "../../../graphql/api/assets.graphql", Input: `type Asset {
+  ID: ID!
+  Name: String!
+  Description: String!
+  URI: String!
+  CreatedAt: Time!
+  UpdatedAt: Time!
 }
 
-var sources = []*ast.Source{
-	{Name: "schemas/assets.graphql", Input: sourceData("schemas/assets.graphql"), BuiltIn: false},
-	{Name: "schemas/schema.graphql", Input: sourceData("schemas/schema.graphql"), BuiltIn: false},
+extend type Query {
+  assets(pagination: Pagination): [Asset!]!
+  asset(id: ID!): Asset
+}
+
+input NewAsset {
+  Name: String!
+  Description: String!
+}
+
+type Header {
+  Key: String!
+  Value: String!
+}
+
+type PresignedURL {
+  URL: String!
+  Fields: [Header!]!
+}
+
+input UpdateAsset {
+  ID: ID!
+  Name: String
+  Description: String
+}
+
+extend type Mutation {
+  createAsset(input: NewAsset!): Asset!
+  updateAsset(input: UpdateAsset!): Asset!
+  deleteAsset(id: ID!): Boolean!
+  uploadAsset(id: ID!): PresignedURL!
+}
+
+`, BuiltIn: false},
+	{Name: "../../../graphql/api/schema.graphql", Input: `# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+scalar Time
+
+type Me {
+  id: ID!
+  name: String!
+  email: String!
+}
+
+input Pagination {
+  count: Int!
+  page: Int!
+}
+
+type Query {
+  me: Me!
+}
+
+type Mutation {
+  empty: Boolean
+}
+
+`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
