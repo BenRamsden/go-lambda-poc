@@ -22,6 +22,11 @@ type Asset struct {
 	UpdatedAt   time.Time `json:"updated_at"`
 }
 
+type AssetRepository interface {
+	CreateAsset(asset Asset) (Asset, error)
+	GetAssets(ownerId string) ([]Asset, error)
+}
+
 type AssetService interface {
 	CreateAsset(auth auth.Auth, newAsset NewAsset) (Asset, error)
 	GetAssets(auth auth.Auth) ([]Asset, error)

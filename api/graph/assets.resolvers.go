@@ -6,15 +6,59 @@ package graph
 
 import (
 	"context"
-	"fmt"
+
+	"github.com/jugo-io/go-poc/api/auth"
+	"github.com/jugo-io/go-poc/api/model"
 )
 
 // CreateAsset is the resolver for the createAsset field.
-func (r *mutationResolver) CreateAsset(ctx context.Context, input NewAsset) (Asset, error) {
-	panic(fmt.Errorf("not implemented: CreateAsset - createAsset"))
+func (res *mutationResolver) CreateAsset(ctx context.Context, input NewAsset) (Asset, error) {
+	user, err := auth.GetUser(ctx)
+	if err != nil {
+		return Asset{}, err
+	}
+
+	asset, err := res.AssetService.CreateAsset(auth.Auth{ID: user.ID}, model.NewAsset{
+		Name:        input.Name,
+		Description: input.Description,
+		URI:         input.URI,
+	})
+
+	return Asset{
+		ID:          asset.ID,
+		Owner:       asset.Owner,
+		Name:        asset.Name,
+		Description: asset.Description,
+		URI:         asset.URI,
+		CreatedAt:   asset.CreatedAt,
+		UpdatedAt:   asset.UpdatedAt,
+	}, err
 }
 
 // Assets is the resolver for the assets field.
-func (r *queryResolver) Assets(ctx context.Context) ([]Asset, error) {
-	panic(fmt.Errorf("not implemented: Assets - assets"))
+func (res *queryResolver) Assets(ctx context.Context) ([]Asset, error) {
+	user, err := auth.GetUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	assets, err := res.AssetService.GetAssets(auth.Auth{ID: user.ID})
+	if err != nil {
+		return nil, err
+	}
+
+	var result []Asset
+	for _, asset := range assets {
+		result = append(result, Asset{
+			ID:          asset.ID,
+			Owner:       asset.Owner,
+			Name:        asset.Name,
+			Description: asset.Description,
+			URI:         asset.URI,
+			CreatedAt:   asset.CreatedAt,
+			UpdatedAt:   asset.UpdatedAt,
+		})
+	}
+
+	return result, nil
 }

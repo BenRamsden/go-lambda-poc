@@ -1,4 +1,4 @@
-.PHONY: list local package generate
+.PHONY: init api package generate deploy
 
 MAKEFLAGS += --silent
 
