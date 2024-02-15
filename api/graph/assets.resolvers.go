@@ -12,13 +12,13 @@ import (
 )
 
 // CreateAsset is the resolver for the createAsset field.
-func (res *mutationResolver) CreateAsset(ctx context.Context, input NewAsset) (Asset, error) {
+func (r *mutationResolver) CreateAsset(ctx context.Context, input NewAsset) (Asset, error) {
 	user, err := auth.GetUser(ctx)
 	if err != nil {
 		return Asset{}, err
 	}
 
-	asset, err := res.AssetService.CreateAsset(auth.Auth{ID: user.ID}, model.NewAsset{
+	asset, err := r.AssetService.CreateAsset(auth.Auth{ID: user.ID}, model.NewAsset{
 		Name:        input.Name,
 		Description: input.Description,
 		URI:         input.URI,
@@ -36,13 +36,13 @@ func (res *mutationResolver) CreateAsset(ctx context.Context, input NewAsset) (A
 }
 
 // Assets is the resolver for the assets field.
-func (res *queryResolver) Assets(ctx context.Context) ([]Asset, error) {
+func (r *queryResolver) Assets(ctx context.Context) ([]Asset, error) {
 	user, err := auth.GetUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	assets, err := res.AssetService.GetAssets(auth.Auth{ID: user.ID})
+	assets, err := r.AssetService.GetAssets(auth.Auth{ID: user.ID})
 	if err != nil {
 		return nil, err
 	}

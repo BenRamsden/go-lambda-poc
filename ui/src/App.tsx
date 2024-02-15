@@ -1,6 +1,7 @@
 import AuthProvider from "./components/auth/provider";
 import { AuthenticatedGraphqlProvider } from "./components/gql/provider";
 import { BrowserRouter, useRoutes } from "react-router-dom";
+import { ThemeProvider } from "@/components/theme-provider";
 
 import Home from "./routes/home";
 import Login from "./routes/login";
@@ -27,13 +28,15 @@ const Routes = () => {
 
 function App() {
   return (
-    <AuthProvider>
-      <AuthenticatedGraphqlProvider>
-        <BrowserRouter>
-          <Routes />
-        </BrowserRouter>
-      </AuthenticatedGraphqlProvider>
-    </AuthProvider>
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <AuthProvider>
+        <AuthenticatedGraphqlProvider>
+          <BrowserRouter>
+            <Routes />
+          </BrowserRouter>
+        </AuthenticatedGraphqlProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

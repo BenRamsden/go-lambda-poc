@@ -13,7 +13,7 @@ const API_AUDIENCE: string = import.meta.env.VITE_API_AUDIENCE;
 
 const CreateGraphqlClient = (link: ApolloLink) => {
   const httpLink = new HttpLink({
-    uri: "/graphql",
+    uri: "http://localhost:4000/graphql",
   });
 
   return new ApolloClient({

@@ -1,0 +1,24 @@
+query getAssets {
+  assets {
+    ID
+    Owner
+    Name
+    Description
+    URI
+    CreatedAt
+    UpdatedAt
+  }
+}
+
+
+mutation createAsset($input: NewAsset!) {
+  createAsset(input: $input) {
+    ID
+    Owner
+    Name
+    Description
+    URI
+    CreatedAt
+    UpdatedAt
+  }
+}
