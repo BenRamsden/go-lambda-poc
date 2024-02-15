@@ -9,18 +9,18 @@ func main() {
 			return err
 		}
 
-		invocationUrl, err := createLambdas(ctx)
+		apiGwEndpointWithoutProtocol, apiGwStageName, err := createLambdas(ctx)
 		if err != nil {
 			return err
 		}
 
-		dist, err := createCloudfront(ctx, bucket, bucketOriginAccessIdentity)
+		dist, err := createCloudfront(ctx, bucket, bucketOriginAccessIdentity, apiGwEndpointWithoutProtocol, apiGwStageName)
 		if err != nil {
 			return err
 		}
 
 		pulumi.Printf("Bucket name: %s\n", bucket.ID())
-		pulumi.Printf("Invocation URL: %s\n", invocationUrl)
+		pulumi.Printf("Invocation URL: https://%s\n", apiGwEndpointWithoutProtocol)
 		pulumi.Printf("Website URL: http://%s\n", dist.DomainName)
 
 		return nil

@@ -8,15 +8,15 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
-func createLambdas(ctx *pulumi.Context) (*pulumi.StringOutput, error) {
+func createLambdas(ctx *pulumi.Context) (*pulumi.StringOutput, *pulumi.String, error) {
 	account, err := aws.GetCallerIdentity(ctx, nil)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	region, err := aws.GetRegion(ctx, &aws.GetRegionArgs{})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Create an IAM role.
@@ -34,7 +34,7 @@ func createLambdas(ctx *pulumi.Context) (*pulumi.StringOutput, error) {
 			}`),
 	})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Attach a policy to allow writing logs to CloudWatch
@@ -74,7 +74,7 @@ func createLambdas(ctx *pulumi.Context) (*pulumi.StringOutput, error) {
 		pulumi.DependsOn([]pulumi.Resource{logPolicy}),
 	)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Create a new API Gateway.
@@ -102,7 +102,7 @@ func createLambdas(ctx *pulumi.Context) (*pulumi.StringOutput, error) {
   ]
 }`)})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Add a resource to the API Gateway.
@@ -113,7 +113,7 @@ func createLambdas(ctx *pulumi.Context) (*pulumi.StringOutput, error) {
 		ParentId: gateway.RootResourceId,
 	})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Add a method to the API Gateway.
@@ -124,7 +124,7 @@ func createLambdas(ctx *pulumi.Context) (*pulumi.StringOutput, error) {
 		ResourceId:    apiresource.ID(),
 	})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Add an integration to the API Gateway.
@@ -138,7 +138,7 @@ func createLambdas(ctx *pulumi.Context) (*pulumi.StringOutput, error) {
 		Uri:                   function.InvokeArn,
 	})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Add a resource based policy to the Lambda function.
@@ -150,7 +150,7 @@ func createLambdas(ctx *pulumi.Context) (*pulumi.StringOutput, error) {
 		SourceArn: pulumi.Sprintf("arn:aws:execute-api:%s:%s:%s/*/*/*", region.Name, account.AccountId, gateway.ID()),
 	}, pulumi.DependsOn([]pulumi.Resource{apiresource}))
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Create a new deployment
@@ -161,10 +161,11 @@ func createLambdas(ctx *pulumi.Context) (*pulumi.StringOutput, error) {
 		StageName:        pulumi.String("prod"),
 	}, pulumi.DependsOn([]pulumi.Resource{apiresource, function, permission}))
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	invocationUrl := pulumi.Sprintf("https://%s.execute-api.%s.amazonaws.com/prod/{message}", gateway.ID(), region.Name)
+	apiGwEndpointWithoutProtocol := pulumi.Sprintf("%s.execute-api.%s.amazonaws.com", gateway.ID(), region.Name)
+	apiGwStageName := pulumi.String("prod")
 
-	return &invocationUrl, nil
+	return &apiGwEndpointWithoutProtocol, &apiGwStageName, nil
 }
