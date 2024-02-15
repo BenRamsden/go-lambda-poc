@@ -16,6 +16,10 @@ const ProtectedRoute = ({ children }: PropsWithChildren) => {
     return <div>Loading...</div>;
   }
 
+  if (!isAuthenticated) {
+    return <div>Unauthorized</div>;
+  }
+
   return <>{children}</>;
 };
 

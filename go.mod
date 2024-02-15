@@ -14,6 +14,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.28.0
 	github.com/awslabs/aws-lambda-go-api-proxy v0.16.1
 	github.com/casbin/casbin/v2 v2.82.0
+	github.com/gin-contrib/cors v1.5.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/google/uuid v1.5.0
 	github.com/gwatts/gin-adapter v1.0.0
@@ -51,6 +52,7 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.6 // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect

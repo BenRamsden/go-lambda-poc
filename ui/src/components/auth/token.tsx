@@ -1,27 +1,23 @@
 import { useAuth0 } from "@auth0/auth0-react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 const Token = () => {
-  const [auth0Token, setAuth0Token] = useState<{ Authorization: string }>({
-    Authorization: "",
-  });
-  const { getAccessTokenSilently } = useAuth0();
+  const { isAuthenticated } = useAuth0();
 
   useEffect(() => {
-    const getToken = async () => {
-      try {
-        const token = await getAccessTokenSilently();
-        setAuth0Token({ Authorization: `Bearer ${token}` });
-      } catch (e) {
-        console.error(e);
-      }
-    };
-
-    getToken();
-  }, [getAccessTokenSilently]);
+    // Force rerender to get the token
+  }, [isAuthenticated]);
 
   return (
-    <pre className="overflow-x-auto">{JSON.stringify(auth0Token, null, 2)}</pre>
+    <pre className="overflow-x-auto">
+      {JSON.stringify(
+        {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        null,
+        2
+      )}
+    </pre>
   );
 };
 

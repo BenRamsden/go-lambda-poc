@@ -9,10 +9,80 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
-import { useGetAssetsQuery } from "@/components/gql/generated";
+import {
+  Asset,
+  useCreateAssetMutation,
+  useGetAssetsLazyQuery,
+} from "@/components/gql/generated";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { AssetView } from "@/components/assets/asset-view";
+import { Input } from "@/components/ui/input";
+import { useForm } from "react-hook-form";
+
+const CreateAsset = () => {
+  const [createAsset] = useCreateAssetMutation();
+  const { register, handleSubmit } = useForm({
+    defaultValues: {
+      Name: "",
+      Description: "",
+    },
+  });
+
+  const onSubmit = async (data: { Name: string; Description: string }) => {
+    await createAsset({
+      variables: {
+        input: {
+          Name: data.Name,
+          Description: data.Description,
+          URI: "https://www.google.com",
+        },
+      },
+      refetchQueries: ["GetAssets"],
+    });
+  };
+
+  return (
+    <form className="container my-4" onSubmit={handleSubmit(onSubmit)}>
+      <Input className="mb-4" placeholder="Name" {...register("Name")} />
+      <Input
+        className="mb-4"
+        placeholder="Description"
+        {...register("Description")}
+      />
+      <Button type="submit">Create</Button>
+    </form>
+  );
+};
 
 const Home = () => {
-  const { data } = useGetAssetsQuery();
+  const [localAssets, setLocalAssets] = useState<Asset[]>([]);
+
+  const [fetchAssets, { data, loading: loadingAssets }] = useGetAssetsLazyQuery(
+    {
+      fetchPolicy: "network-only",
+    }
+  );
+
+  useEffect(() => {
+    fetchAssets();
+  }, []);
+
+  useEffect(() => {
+    if (!loadingAssets && data?.assets)
+      setLocalAssets(
+        [...data.assets].sort(
+          (a, b) =>
+            new Date(b.CreatedAt).getTime() - new Date(a.CreatedAt).getTime()
+        )
+      );
+  }, [loadingAssets]);
+
+  const handleRefreshAssets = useCallback(() => {
+    setLocalAssets([]);
+    fetchAssets();
+  }, [fetchAssets]);
 
   return (
     <div>
@@ -45,7 +115,9 @@ const Home = () => {
                 </AccordionTrigger>
               </CardHeader>
               <AccordionContent>
-                <CardContent>Content</CardContent>
+                <CardContent>
+                  <CreateAsset />
+                </CardContent>
               </AccordionContent>
             </AccordionItem>
           </Accordion>
@@ -55,16 +127,23 @@ const Home = () => {
 
         <Card className="mt-8">
           <CardHeader>
-            <h1 className="font-bold">My Assets</h1>
+            <div className="flex flex-row justify-between items-center">
+              <h1 className="font-bold">My Assets</h1>
+              <Button variant="outline" onClick={() => handleRefreshAssets()}>
+                <RefreshCw />
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <ul className="list-none">
-              {data &&
-                data.assets.map((asset) => {
+              {!loadingAssets &&
+                localAssets.map((asset, index) => {
                   return (
                     <li key={asset.ID} className="mb-4">
-                      <h2 className="font-bold">{asset.Name}</h2>
-                      <p>{asset.Description}</p>
+                      <AssetView asset={asset} />
+                      {index !== localAssets.length - 1 && (
+                        <Separator className="my-4" />
+                      )}
                     </li>
                   );
                 })}
