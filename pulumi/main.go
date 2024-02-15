@@ -6,6 +6,9 @@ func main() {
 	pulumi.Run(func(ctx *pulumi.Context) error {
 		name := "jugo-go-lambda-poc"
 
+		// TODO: Fetch root account zone id
+		// TODO: Create poc.sandbox.jugo.io subdomain
+
 		bucket, err := createBucket(ctx, name)
 		if err != nil {
 			return err

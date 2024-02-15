@@ -1,12 +1,3 @@
-# Created by pulumi
-this repository was created by pulumi
+# jugo-go-lambda-poc
 
-## Ben TODO
-
-- Create s3 bucket for assets :checkmark:
-- Deploy go lambda :checkmark:
-- Deploy web ui to s3
-- Add env to container
-- Deploy aurora
-- Write artillery script to load test
-- Stretch: migrate lambda to multiple AppSync resolvers
+A proof of concept how Go Serverless Lambda can be utilized as a GraphQL backend for React.
