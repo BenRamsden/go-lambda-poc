@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/cloudfront"
 	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/s3"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"mime"
@@ -34,7 +35,7 @@ func crawlDirectory(dir string) ([]string, error) {
 	return filePaths, nil
 }
 
-func createBucket(ctx *pulumi.Context) (*s3.BucketV2, error) {
+func createBucket(ctx *pulumi.Context) (*s3.BucketV2, *cloudfront.OriginAccessIdentity, error) {
 	bucket, err := s3.NewBucketV2(ctx, "jugo-go-lambda-poc", &s3.BucketV2Args{
 		Bucket: pulumi.String("jugo-go-lambda-poc"),
 		Tags: pulumi.StringMap{
@@ -42,7 +43,7 @@ func createBucket(ctx *pulumi.Context) (*s3.BucketV2, error) {
 		},
 	})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	//Allow public read access to all objects in the bucket
@@ -54,7 +55,7 @@ func createBucket(ctx *pulumi.Context) (*s3.BucketV2, error) {
 		RestrictPublicBuckets: pulumi.Bool(false),
 	})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	//Object Ownership, set ACLs enabled
@@ -71,6 +72,10 @@ func createBucket(ctx *pulumi.Context) (*s3.BucketV2, error) {
 		Acl:    pulumi.String("public-read"),
 	})
 
+	bucketOriginAccessIdentity, err := cloudfront.NewOriginAccessIdentity(ctx, "jugo-go-lambda-poc-identity", &cloudfront.OriginAccessIdentityArgs{
+		Comment: pulumi.String("jugo-go-lambda-poc-identity"),
+	})
+
 	_, err = s3.NewBucketPolicy(ctx, "jugo-go-lambda-poc-policy", &s3.BucketPolicyArgs{
 		Bucket: bucket.ID(),
 		Policy: pulumi.Sprintf(`{
@@ -79,7 +84,9 @@ func createBucket(ctx *pulumi.Context) (*s3.BucketV2, error) {
         {
             "Sid": "PublicReadGetObject",
             "Effect": "Allow",
-            "Principal": "*",
+            "Principal": {
+				"AWS": "%s"
+			},
             "Action": [
                 "s3:GetObject"
             ],
@@ -88,7 +95,7 @@ func createBucket(ctx *pulumi.Context) (*s3.BucketV2, error) {
             ]
         }
     ]
-}`, bucket.ID()),
+}`, bucketOriginAccessIdentity.IamArn, bucket.ID()),
 	})
 
 	files, err := crawlDirectory("../bin/ui")
@@ -103,11 +110,11 @@ func createBucket(ctx *pulumi.Context) (*s3.BucketV2, error) {
 			Key:         pulumi.String(key),
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 
 	// Export the name of the bucket
 	ctx.Export("bucketName", bucket.ID())
-	return bucket, nil
+	return bucket, bucketOriginAccessIdentity, nil
 }
