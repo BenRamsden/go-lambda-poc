@@ -19,7 +19,7 @@ func (a *assetService) CreateAsset(context context.Context, newAsset NewAsset) (
 }
 
 // DeleteAsset implements AssetService.
-func (a *assetService) DeleteAsset(context context.Context, id string) error {
+func (a *assetService) DeleteAsset(context context.Context, ownerId string, id string) error {
 	if len(id) == 0 {
 		return NewInvalidInputError(errors.New("id is required"))
 	}
@@ -28,7 +28,7 @@ func (a *assetService) DeleteAsset(context context.Context, id string) error {
 }
 
 // GetAsset implements AssetService.
-func (a *assetService) GetAsset(context context.Context, id string) (Asset, error) {
+func (a *assetService) GetAsset(context context.Context, ownerId string, id string) (Asset, error) {
 	if len(id) == 0 {
 		return Asset{}, NewInvalidInputError(errors.New("id is required"))
 	}
@@ -37,12 +37,14 @@ func (a *assetService) GetAsset(context context.Context, id string) (Asset, erro
 }
 
 // GetAssets implements AssetService.
-func (a *assetService) GetAssets(context context.Context, pagination Pagination) ([]Asset, error) {
-	return a.repo.GetAssets(context, pagination)
+func (a *assetService) GetAssets(context context.Context, ownerId string, pagination Pagination) ([]Asset, error) {
+	return a.repo.GetAssets(context, GetAssetsFilter{
+		OwnerId: ownerId,
+	}, pagination)
 }
 
 // UpdateAsset implements AssetService.
-func (a *assetService) UpdateAsset(context context.Context, updateAsset UpdateAsset) (Asset, error) {
+func (a *assetService) UpdateAsset(context context.Context, ownerId string, updateAsset UpdateAsset) (Asset, error) {
 	if len(updateAsset.ID) == 0 {
 		return Asset{}, NewInvalidInputError(errors.New("id is required"))
 	}
@@ -51,7 +53,7 @@ func (a *assetService) UpdateAsset(context context.Context, updateAsset UpdateAs
 }
 
 // UploadAsset implements AssetService.
-func (a *assetService) UploadAsset(context context.Context, id string) (PresignedURL, error) {
+func (a *assetService) UploadAsset(context context.Context, ownerId string, id string) (PresignedURL, error) {
 	panic("unimplemented")
 }
 

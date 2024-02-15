@@ -13,6 +13,9 @@ init:
 api:
 	go run cmd/api/local_main.go
 
+enforcer:
+	go run cmd/enforcer/local_main.go
+
 generate:
 	@echo "Generating Go code"
 	cd graphql/go && go run github.com/99designs/gqlgen generate --config api-gqlgen.yml

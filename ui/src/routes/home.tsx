@@ -1,4 +1,3 @@
-import LoginButton from "@/components/auth/login-button";
 import Header from "@/components/ui/header";
 
 const Home = () => {

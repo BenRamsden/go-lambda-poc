@@ -8,6 +8,7 @@ import (
 
 type Asset struct {
 	UUIDModel
+	OwnerId     string `gorm:"index"`
 	Name        string
 	Description string
 	URI         string
@@ -16,6 +17,7 @@ type Asset struct {
 // CreateAsset implements Repository.
 func (r *repository) CreateAsset(context context.Context, newAsset model.NewAsset) (model.Asset, error) {
 	asset := &Asset{
+		OwnerId:     newAsset.OwnerId,
 		Name:        newAsset.Name,
 		Description: newAsset.Description,
 		URI:         "",
@@ -29,6 +31,7 @@ func (r *repository) CreateAsset(context context.Context, newAsset model.NewAsse
 
 	return model.Asset{
 		ID:          asset.ID,
+		OwnerId:     asset.OwnerId,
 		Name:        asset.Name,
 		Description: asset.Description,
 		URI:         asset.URI,
@@ -61,6 +64,7 @@ func (r *repository) GetAsset(context context.Context, id string) (model.Asset, 
 
 	return model.Asset{
 		ID:          asset.ID,
+		OwnerId:     asset.OwnerId,
 		Name:        asset.Name,
 		Description: asset.Description,
 		URI:         asset.URI,
@@ -70,9 +74,10 @@ func (r *repository) GetAsset(context context.Context, id string) (model.Asset, 
 }
 
 // GetAssets implements Repository.
-func (r *repository) GetAssets(context context.Context, pagination model.Pagination) ([]model.Asset, error) {
+func (r *repository) GetAssets(context context.Context, filter model.GetAssetsFilter, pagination model.Pagination) ([]model.Asset, error) {
 	var assets []Asset
-	tx := r.Scopes(P(pagination)).Find(&assets)
+
+	tx := r.Scopes(P(pagination)).Where("OwnerId = ?", filter.OwnerId).Find(&assets)
 
 	if tx.Error != nil {
 		return nil, tx.Error

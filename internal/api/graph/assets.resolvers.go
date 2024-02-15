@@ -26,7 +26,7 @@ func (r *mutationResolver) CreateAsset(ctx context.Context, input NewAsset) (Ass
 
 // UpdateAsset is the resolver for the updateAsset field.
 func (r *mutationResolver) UpdateAsset(ctx context.Context, input UpdateAsset) (Asset, error) {
-	asset, err := r.AssetService.UpdateAsset(ctx, model.UpdateAsset{
+	asset, err := r.AssetService.UpdateAsset(ctx, "owner", model.UpdateAsset{
 		ID:          input.ID,
 		Name:        input.Name,
 		Description: input.Description,
@@ -40,7 +40,7 @@ func (r *mutationResolver) UpdateAsset(ctx context.Context, input UpdateAsset) (
 
 // DeleteAsset is the resolver for the deleteAsset field.
 func (r *mutationResolver) DeleteAsset(ctx context.Context, id string) (bool, error) {
-	err := r.AssetService.DeleteAsset(ctx, id)
+	err := r.AssetService.DeleteAsset(ctx, "owner", id)
 	if err != nil {
 		panic(err)
 	}
@@ -55,7 +55,7 @@ func (r *mutationResolver) UploadAsset(ctx context.Context, id string) (Presigne
 
 // Assets is the resolver for the assets field.
 func (r *queryResolver) Assets(ctx context.Context, pagination *Pagination) ([]Asset, error) {
-	assets, err := r.AssetService.GetAssets(ctx, P(pagination))
+	assets, err := r.AssetService.GetAssets(ctx, "owner", P(pagination))
 	if err != nil {
 		panic(err)
 	}
@@ -70,7 +70,7 @@ func (r *queryResolver) Assets(ctx context.Context, pagination *Pagination) ([]A
 
 // Asset is the resolver for the asset field.
 func (r *queryResolver) Asset(ctx context.Context, id string) (*Asset, error) {
-	asset, err := r.AssetService.GetAsset(ctx, id)
+	asset, err := r.AssetService.GetAsset(ctx, "owner", id)
 	if err != nil {
 		panic(err)
 	}

@@ -1,16 +1,27 @@
 package model
 
-type Auth struct {
-	ID    string `json:"id"`
-	Email string `json:"email"`
-}
+type Permission string
+
+const (
+	PermissionRead   Permission = "read"
+	PermissionWrite  Permission = "write"
+	PermissionDelete Permission = "delete"
+)
+
+type AuthGroup string
+
+const (
+	AuthGroupAdmin AuthGroup = "admin"
+	AuthGroupUser  AuthGroup = "user"
+)
 
 const (
 	ErrNotAuthenticated = "not authenticated"
 )
 
 type AuthService interface {
-	// Find or create a new auth
-	// If the user cannot be authenticated ErrNotAuthenticated will be returned
-	FindOrCreate(jwt string) (Auth, error)
+	// Add or remove permissions for a user
+	Enforce(actor string, object string, permission Permission) error
+	Revoke(actor string, object string, permission Permission) error
+	Can(actor string, object string, permission Permission) bool
 }

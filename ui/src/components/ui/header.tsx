@@ -17,7 +17,7 @@ const LoginFlow = () => {
   return <LoginButton />;
 };
 
-const Header = ({ children }: PropsWithChildren) => {
+const Header = ({}: PropsWithChildren) => {
   return (
     <header className="flex flex-row justify-between align-middle content-center p-4 bg-slate-200">
       <h1 className="self-center">Go POC</h1>

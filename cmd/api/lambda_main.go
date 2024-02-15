@@ -1,17 +1,20 @@
+//go:build lambda
+
 package main
 
 import (
 	"context"
+	"log"
+	"os"
+
 	"github.com/jugo-io/go-poc/internal/api"
 	"github.com/jugo-io/go-poc/internal/api/sql"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"log"
-	"os"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/awslabs/aws-lambda-go-api-proxy/gin"
+	ginadapter "github.com/awslabs/aws-lambda-go-api-proxy/gin"
 )
 
 var ginLambda *ginadapter.GinLambda
