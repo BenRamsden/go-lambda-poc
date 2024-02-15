@@ -6,6 +6,40 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
+func createAPIOrderedCacheBehaviour(apiGwEndpointWithoutProtocol *pulumi.StringOutput, pathPattern pulumi.String) *cloudfront.DistributionOrderedCacheBehaviorArgs {
+	return &cloudfront.DistributionOrderedCacheBehaviorArgs{
+		PathPattern: pathPattern,
+		AllowedMethods: pulumi.StringArray{
+			pulumi.String("DELETE"),
+			pulumi.String("GET"),
+			pulumi.String("HEAD"),
+			pulumi.String("OPTIONS"),
+			pulumi.String("PATCH"),
+			pulumi.String("POST"),
+			pulumi.String("PUT"),
+		},
+		CachedMethods: pulumi.StringArray{
+			pulumi.String("GET"),
+			pulumi.String("HEAD"),
+		},
+		TargetOriginId: apiGwEndpointWithoutProtocol,
+		ForwardedValues: &cloudfront.DistributionOrderedCacheBehaviorForwardedValuesArgs{
+			QueryString: pulumi.Bool(false),
+			Headers: pulumi.StringArray{
+				pulumi.String("Origin"),
+				pulumi.String("Authorization"),
+			},
+			Cookies: &cloudfront.DistributionOrderedCacheBehaviorForwardedValuesCookiesArgs{
+				Forward: pulumi.String("none"),
+			},
+		},
+		MinTtl:               pulumi.Int(0),
+		DefaultTtl:           pulumi.Int(0),
+		MaxTtl:               pulumi.Int(0),
+		ViewerProtocolPolicy: pulumi.String("redirect-to-https"),
+	}
+}
+
 func createCloudfront(ctx *pulumi.Context, bucket *s3.BucketV2, bucketOriginAccessIdentity *cloudfront.OriginAccessIdentity, apiGwEndpointWithoutProtocol *pulumi.StringOutput, apiGwStageName *pulumi.String) (*cloudfront.Distribution, error) {
 	OriginId := bucket.Arn
 
@@ -41,10 +75,6 @@ func createCloudfront(ctx *pulumi.Context, bucket *s3.BucketV2, bucketOriginAcce
 		//	Bucket:         pulumi.String("mylogs.s3.amazonaws.com"),
 		//	Prefix:         pulumi.String("myprefix"),
 		//},
-		//Aliases: pulumi.StringArray{
-		//	pulumi.String("mysite.example.com"),
-		//	pulumi.String("yoursite.example.com"),
-		//},
 		DefaultCacheBehavior: &cloudfront.DistributionDefaultCacheBehaviorArgs{
 			AllowedMethods: pulumi.StringArray{
 				pulumi.String("DELETE"),
@@ -66,55 +96,29 @@ func createCloudfront(ctx *pulumi.Context, bucket *s3.BucketV2, bucketOriginAcce
 					Forward: pulumi.String("none"),
 				},
 			},
-			ViewerProtocolPolicy: pulumi.String("allow-all"),
 			MinTtl:               pulumi.Int(0),
-			DefaultTtl:           pulumi.Int(3600),
-			MaxTtl:               pulumi.Int(86400),
+			DefaultTtl:           pulumi.Int(0),
+			MaxTtl:               pulumi.Int(0),
+			ViewerProtocolPolicy: pulumi.String("redirect-to-https"),
 		},
 		OrderedCacheBehaviors: cloudfront.DistributionOrderedCacheBehaviorArray{
-			&cloudfront.DistributionOrderedCacheBehaviorArgs{
-				PathPattern: pulumi.String("/graphql"),
-				AllowedMethods: pulumi.StringArray{
-					pulumi.String("DELETE"),
-					pulumi.String("GET"),
-					pulumi.String("HEAD"),
-					pulumi.String("OPTIONS"),
-					pulumi.String("PATCH"),
-					pulumi.String("POST"),
-					pulumi.String("PUT"),
-				},
-				CachedMethods: pulumi.StringArray{
-					pulumi.String("GET"),
-					pulumi.String("HEAD"),
-				},
-				TargetOriginId: apiGwEndpointWithoutProtocol,
-				ForwardedValues: &cloudfront.DistributionOrderedCacheBehaviorForwardedValuesArgs{
-					QueryString: pulumi.Bool(false),
-					Headers: pulumi.StringArray{
-						pulumi.String("Origin"),
-						pulumi.String("Authorization"),
-					},
-					Cookies: &cloudfront.DistributionOrderedCacheBehaviorForwardedValuesCookiesArgs{
-						Forward: pulumi.String("none"),
-					},
-				},
-				MinTtl:               pulumi.Int(0),
-				DefaultTtl:           pulumi.Int(86400),
-				MaxTtl:               pulumi.Int(31536000),
-				Compress:             pulumi.Bool(true),
-				ViewerProtocolPolicy: pulumi.String("redirect-to-https"),
-			},
+			createAPIOrderedCacheBehaviour(apiGwEndpointWithoutProtocol, pulumi.String("/graphql")),
+			createAPIOrderedCacheBehaviour(apiGwEndpointWithoutProtocol, pulumi.String("/playground")),
 		},
-		//PriceClass: pulumi.String("PriceClass_200"),
+		PriceClass: pulumi.String("PriceClass_200"),
 		Restrictions: &cloudfront.DistributionRestrictionsArgs{
 			GeoRestriction: &cloudfront.DistributionRestrictionsGeoRestrictionArgs{
 				RestrictionType: pulumi.String("whitelist"),
 				Locations: pulumi.StringArray{
-					//pulumi.String("US"),
-					//pulumi.String("CA"),
 					pulumi.String("GB"),
-					//pulumi.String("DE"),
 				},
+			},
+		},
+		CustomErrorResponses: &cloudfront.DistributionCustomErrorResponseArray{
+			&cloudfront.DistributionCustomErrorResponseArgs{
+				ErrorCode:        pulumi.Int(404),
+				ResponseCode:     pulumi.Int(200),
+				ResponsePagePath: pulumi.String("/index.html"),
 			},
 		},
 		Tags: pulumi.StringMap{
@@ -124,6 +128,7 @@ func createCloudfront(ctx *pulumi.Context, bucket *s3.BucketV2, bucketOriginAcce
 			CloudfrontDefaultCertificate: pulumi.Bool(true),
 		},
 	})
+
 	if err != nil {
 		return nil, err
 	}

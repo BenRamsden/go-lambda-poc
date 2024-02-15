@@ -4,7 +4,6 @@ import (
 	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/cloudfront"
 	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/s3"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
-	"mime"
 	"os"
 	"strings"
 )
@@ -101,12 +100,21 @@ func createBucket(ctx *pulumi.Context) (*s3.BucketV2, *cloudfront.OriginAccessId
 	files, err := crawlDirectory("../bin/ui")
 	for _, file := range files {
 		key := strings.Replace(file, "../bin/ui/", "", 1)
-		mimeType := mime.TypeByExtension(key)
+		mimeType := pulumi.String("")
+
+		// TODO: replace with more advanced MIME, such as filetype lib
+		if strings.HasSuffix(key, ".html") {
+			mimeType = pulumi.String("text/html")
+		} else if strings.HasSuffix(key, ".css") {
+			mimeType = pulumi.String("text/css")
+		} else if strings.HasSuffix(key, ".js") {
+			mimeType = pulumi.String("application/javascript")
+		}
 		_, err := s3.NewBucketObjectv2(ctx, key, &s3.BucketObjectv2Args{
 			Bucket:      bucket.ID(),
 			Source:      pulumi.NewFileAsset(file),
 			Acl:         pulumi.String("public-read"),
-			ContentType: pulumi.String(mimeType),
+			ContentType: mimeType,
 			Key:         pulumi.String(key),
 		})
 		if err != nil {
