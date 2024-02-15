@@ -1,0 +1,52 @@
+config:
+  target: "https://d3rgy3ald5nwqu.cloudfront.net"
+  phases:
+    - duration: 30
+      arrivalRate: 50
+  http:
+    defaults:
+      headers:
+        Authorization: "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IlRxZV9Nc1d0ZHJ1MnFaWGJXOWJOMSJ9.eyJlbWFpbCI6InRvbS5hdGtpbnNvbkBqdWdvLmlvIiwiaXNzIjoiaHR0cHM6Ly9hdXRoLnNhbmRib3guanVnby5pby8iLCJzdWIiOiJhdXRoMHw2MzliMjI2NDQ2YTNiZDZhMzgzM2IxNzEiLCJhdWQiOlsiaHR0cDovL2xvY2FsaG9zdDo0MDAwL2dyYXBocWwiLCJodHRwczovL2p1Z28tc2FuZGJveC5ldS5hdXRoMC5jb20vdXNlcmluZm8iXSwiaWF0IjoxNzA3OTIzOTI2LCJleHAiOjE3MDgwMTAzMjYsImF6cCI6IjNidlZZYlJsdU1GalFKcTM3TGlUcFRjRDNPcEVhRVluIiwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCJ9.jFtbszaBw8xddIaZPFlaAAX_u021VXBS4l4s6s9Uj-Mx4O6KLuy4FSe-rMduCIJzZVHlDiHpNVbUJncGUGkqby3eTxYQzAshIALLdn5i1owYoFc5AWFE6p3JetP8rbjGn8PIbjWqJqTSYXGM7dPRZRY9tZPdywOMZY-y4De0Moo2Qw4QqK3qlQaEhUf3dgGLfmmn32tfxiGA_sEsNiOe9bSRhTQsR2Bg3zrFITE7HA2_D3BQ0kPnoa2xLifFDg00GmQgKX5DTVgqdcM0Z-tgDLIG_SxZ_Jz-jxtoBcddK-4tf1SDpixODD3qITssXP_Z4P62jPiCQQ3CWsEYrjbk2g"
+scenarios:
+  - name: "Create assets"
+    flow:
+      - post:
+          url: "/graphql"
+          json:
+            query: |
+              mutation CreateAsset($input: NewAsset!) {
+                createAsset(input: $input) {
+                  ID
+                  Name
+                  Description
+                  URI
+                  CreatedAt
+                  UpdatedAt
+                  Owner
+                }
+              }
+            variables:
+              input:
+                Name: "artillery-asset-name-{{ $randomString() }}"
+                Description: "artillery-asset-description-{{ $randomString() }}"
+                URI: "s3://artillery-fake-bucket/{{ $randomString() }}"
+          capture:
+            - json: "$.data.createAsset.ID"
+              as: "assetId"
+#            - json: "$"
+#              as: body
+
+      - post:
+          url: "/graphql"
+          json:
+            query: |
+              query Assets {
+                assets {
+                  ID
+                  Name
+                  Description
+                  URI
+                  CreatedAt
+                  UpdatedAt
+                }
+              }
