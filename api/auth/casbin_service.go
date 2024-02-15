@@ -1,9 +1,9 @@
-package model
+package auth
 
 import (
 	"github.com/casbin/casbin/v2"
 	casbinmodel "github.com/casbin/casbin/v2/model"
-	fileadapter "github.com/casbin/casbin/v2/persist/file-adapter"
+	"github.com/casbin/casbin/v2/persist"
 )
 
 const PolicyStr string = `
@@ -58,15 +58,13 @@ func (svc *authService) Revoke(actor string, object string, permission Permissio
 	return nil
 }
 
-func NewAuthService() AuthService {
-	a := fileadapter.NewAdapter("policy.csv")
-
+func NewAuthService(adapter persist.Adapter) AuthService {
 	m, err := casbinmodel.NewModelFromString(PolicyStr)
 	if err != nil {
 		panic(err)
 	}
 
-	e, err := casbin.NewEnforcer(m, a)
+	e, err := casbin.NewEnforcer(m, adapter)
 	if err != nil {
 		panic(err)
 	}

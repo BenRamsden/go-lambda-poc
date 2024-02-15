@@ -6,18 +6,17 @@ package graph
 
 import (
 	"context"
-
-	"github.com/aws/smithy-go/ptr"
+	"fmt"
 )
 
 // Empty is the resolver for the empty field.
 func (r *mutationResolver) Empty(ctx context.Context) (*bool, error) {
-	return ptr.Bool(false), nil
+	panic(fmt.Errorf("not implemented: Empty - empty"))
 }
 
 // Me is the resolver for the me field.
 func (r *queryResolver) Me(ctx context.Context) (Me, error) {
-	return Me{}, nil
+	panic(fmt.Errorf("not implemented: Me - me"))
 }
 
 // Mutation returns MutationResolver implementation.

@@ -8,16 +8,12 @@ import (
 
 type Asset struct {
 	ID          string    `json:"ID"`
+	Owner       string    `json:"Owner"`
 	Name        string    `json:"Name"`
 	Description string    `json:"Description"`
 	URI         string    `json:"URI"`
 	CreatedAt   time.Time `json:"CreatedAt"`
 	UpdatedAt   time.Time `json:"UpdatedAt"`
-}
-
-type Header struct {
-	Key   string `json:"Key"`
-	Value string `json:"Value"`
 }
 
 type Me struct {
@@ -32,23 +28,8 @@ type Mutation struct {
 type NewAsset struct {
 	Name        string `json:"Name"`
 	Description string `json:"Description"`
-}
-
-type Pagination struct {
-	Count int `json:"count"`
-	Page  int `json:"page"`
-}
-
-type PresignedURL struct {
-	URL    string   `json:"URL"`
-	Fields []Header `json:"Fields"`
+	URI         string `json:"URI"`
 }
 
 type Query struct {
-}
-
-type UpdateAsset struct {
-	ID          string  `json:"ID"`
-	Name        *string `json:"Name,omitempty"`
-	Description *string `json:"Description,omitempty"`
 }

@@ -13,16 +13,13 @@ init:
 api:
 	go run cmd/api/local_main.go
 
-enforcer:
-	go run cmd/enforcer/local_main.go
-
 generate:
 	@echo "Generating Go code"
 	cd graphql/go && go run github.com/99designs/gqlgen generate --config api-gqlgen.yml
 	@echo "Generating TypeScript code"
 	cd graphql/typescript && yarn generate
 
-LAMBDAS_BINARIES := api migrate
+LAMBDAS_BINARIES := api
 package:
 	@echo "Building lambdas"
 	@for lambda in $(LAMBDAS_BINARIES); do \

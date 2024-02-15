@@ -1,4 +1,4 @@
-package model
+package auth
 
 type Permission string
 
@@ -13,10 +13,6 @@ type AuthGroup string
 const (
 	AuthGroupAdmin AuthGroup = "admin"
 	AuthGroupUser  AuthGroup = "user"
-)
-
-const (
-	ErrNotAuthenticated = "not authenticated"
 )
 
 type AuthService interface {

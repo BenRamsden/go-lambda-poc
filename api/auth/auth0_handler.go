@@ -13,7 +13,7 @@ import (
 	"github.com/auth0/go-jwt-middleware/v2/validator"
 	"github.com/gin-gonic/gin"
 	adapter "github.com/gwatts/gin-adapter"
-	"github.com/jugo-io/go-poc/internal/api/env"
+	"github.com/jugo-io/go-poc/api/env"
 )
 
 // CustomClaims contains custom data we want from the token.
@@ -22,7 +22,7 @@ type CustomClaims struct {
 }
 
 func (c CustomClaims) HasScope(expectedScope string) bool {
-	result := strings.Split(c.Scope, " ")
+	result := c.GetScopes()
 	for i := range result {
 		if result[i] == expectedScope {
 			return true
@@ -30,6 +30,10 @@ func (c CustomClaims) HasScope(expectedScope string) bool {
 	}
 
 	return false
+}
+
+func (c CustomClaims) GetScopes() []string {
+	return strings.Split(c.Scope, " ")
 }
 
 // Validate does nothing for this example, but we need

@@ -4,7 +4,7 @@ schema:
 
 # Where should the generated server code go?
 exec:
-  filename: ../../internal/api/graph/generated.go
+  filename: ../../api/graph/generated.go
   package: graph
 
 # Uncomment to enable federation
@@ -14,13 +14,13 @@ exec:
 
 # Where should any generated models go?
 model:
-  filename: ../../internal/api/graph/models_gen.go
+  filename: ../../api/graph/models_gen.go
   package: graph
 
 # Where should the resolver implementations go?
 resolver:
   layout: follow-schema
-  dir: ../../internal/api/graph
+  dir: ../../api/graph
   package: graph
   filename_template: "{name}.resolvers.go"
   # Optional: turn on to not generate template comments above resolvers
@@ -66,7 +66,7 @@ return_pointers_in_unmarshalinput: false
 # gqlgen will search for any type names in the schema in these go packages
 # if they match it will use them, otherwise it will generate them.
 autobind:
-#  - "github.com/jugo-io/go-poc/internal/api/model"
+#  - "github.com/jugo-io/go-poc/api/model"
 
 # This section declares type mapping between the GraphQL and go type systems
 #

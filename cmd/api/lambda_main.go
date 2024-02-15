@@ -5,12 +5,8 @@ package main
 import (
 	"context"
 	"log"
-	"os"
 
-	"github.com/jugo-io/go-poc/internal/api"
-	"github.com/jugo-io/go-poc/internal/api/sql"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
+	"github.com/jugo-io/go-poc/api"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -22,18 +18,7 @@ var ginLambda *ginadapter.GinLambda
 func init() {
 	log.Printf("Gin cold start")
 
-	dsn := os.Getenv("DSN")
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
-	if err != nil {
-		// TODO: Once pulumi ENV / Secrets Manager is set up, re-add the panic
-		//panic("failed to connect database")
-	}
-
-	repo := sql.NewSQLRepository(db)
-
-	options := api.HandlerOptions{
-		Repo: repo,
-	}
+	options := api.HandlerOptions{}
 	r := api.Handler(options)
 	ginLambda = ginadapter.New(r)
 }

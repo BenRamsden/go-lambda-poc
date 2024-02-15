@@ -51,13 +51,9 @@ type ComplexityRoot struct {
 		Description func(childComplexity int) int
 		ID          func(childComplexity int) int
 		Name        func(childComplexity int) int
+		Owner       func(childComplexity int) int
 		URI         func(childComplexity int) int
 		UpdatedAt   func(childComplexity int) int
-	}
-
-	Header struct {
-		Key   func(childComplexity int) int
-		Value func(childComplexity int) int
 	}
 
 	Me struct {
@@ -68,20 +64,11 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		CreateAsset func(childComplexity int, input NewAsset) int
-		DeleteAsset func(childComplexity int, id string) int
 		Empty       func(childComplexity int) int
-		UpdateAsset func(childComplexity int, input UpdateAsset) int
-		UploadAsset func(childComplexity int, id string) int
-	}
-
-	PresignedURL struct {
-		Fields func(childComplexity int) int
-		URL    func(childComplexity int) int
 	}
 
 	Query struct {
-		Asset  func(childComplexity int, id string) int
-		Assets func(childComplexity int, pagination *Pagination) int
+		Assets func(childComplexity int) int
 		Me     func(childComplexity int) int
 	}
 }
@@ -89,14 +76,10 @@ type ComplexityRoot struct {
 type MutationResolver interface {
 	Empty(ctx context.Context) (*bool, error)
 	CreateAsset(ctx context.Context, input NewAsset) (Asset, error)
-	UpdateAsset(ctx context.Context, input UpdateAsset) (Asset, error)
-	DeleteAsset(ctx context.Context, id string) (bool, error)
-	UploadAsset(ctx context.Context, id string) (PresignedURL, error)
 }
 type QueryResolver interface {
 	Me(ctx context.Context) (Me, error)
-	Assets(ctx context.Context, pagination *Pagination) ([]Asset, error)
-	Asset(ctx context.Context, id string) (*Asset, error)
+	Assets(ctx context.Context) ([]Asset, error)
 }
 
 type executableSchema struct {
@@ -146,6 +129,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Asset.Name(childComplexity), true
 
+	case "Asset.Owner":
+		if e.complexity.Asset.Owner == nil {
+			break
+		}
+
+		return e.complexity.Asset.Owner(childComplexity), true
+
 	case "Asset.URI":
 		if e.complexity.Asset.URI == nil {
 			break
@@ -159,20 +149,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Asset.UpdatedAt(childComplexity), true
-
-	case "Header.Key":
-		if e.complexity.Header.Key == nil {
-			break
-		}
-
-		return e.complexity.Header.Key(childComplexity), true
-
-	case "Header.Value":
-		if e.complexity.Header.Value == nil {
-			break
-		}
-
-		return e.complexity.Header.Value(childComplexity), true
 
 	case "Me.email":
 		if e.complexity.Me.Email == nil {
@@ -207,18 +183,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateAsset(childComplexity, args["input"].(NewAsset)), true
 
-	case "Mutation.deleteAsset":
-		if e.complexity.Mutation.DeleteAsset == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_deleteAsset_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.DeleteAsset(childComplexity, args["id"].(string)), true
-
 	case "Mutation.empty":
 		if e.complexity.Mutation.Empty == nil {
 			break
@@ -226,67 +190,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.Empty(childComplexity), true
 
-	case "Mutation.updateAsset":
-		if e.complexity.Mutation.UpdateAsset == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_updateAsset_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.UpdateAsset(childComplexity, args["input"].(UpdateAsset)), true
-
-	case "Mutation.uploadAsset":
-		if e.complexity.Mutation.UploadAsset == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_uploadAsset_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.UploadAsset(childComplexity, args["id"].(string)), true
-
-	case "PresignedURL.Fields":
-		if e.complexity.PresignedURL.Fields == nil {
-			break
-		}
-
-		return e.complexity.PresignedURL.Fields(childComplexity), true
-
-	case "PresignedURL.URL":
-		if e.complexity.PresignedURL.URL == nil {
-			break
-		}
-
-		return e.complexity.PresignedURL.URL(childComplexity), true
-
-	case "Query.asset":
-		if e.complexity.Query.Asset == nil {
-			break
-		}
-
-		args, err := ec.field_Query_asset_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.Asset(childComplexity, args["id"].(string)), true
-
 	case "Query.assets":
 		if e.complexity.Query.Assets == nil {
 			break
 		}
 
-		args, err := ec.field_Query_assets_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.Assets(childComplexity, args["pagination"].(*Pagination)), true
+		return e.complexity.Query.Assets(childComplexity), true
 
 	case "Query.me":
 		if e.complexity.Query.Me == nil {
@@ -304,8 +213,6 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	ec := executionContext{rc, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputNewAsset,
-		ec.unmarshalInputPagination,
-		ec.unmarshalInputUpdateAsset,
 	)
 	first := true
 
@@ -403,8 +310,9 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "../../../graphql/api/assets.graphql", Input: `type Asset {
+	{Name: "../../graphql/api/assets.graphql", Input: `type Asset {
   ID: ID!
+  Owner: ID!
   Name: String!
   Description: String!
   URI: String!
@@ -413,40 +321,21 @@ var sources = []*ast.Source{
 }
 
 extend type Query {
-  assets(pagination: Pagination): [Asset!]!
-  asset(id: ID!): Asset
+  assets: [Asset!]!
 }
 
 input NewAsset {
   Name: String!
   Description: String!
-}
-
-type Header {
-  Key: String!
-  Value: String!
-}
-
-type PresignedURL {
-  URL: String!
-  Fields: [Header!]!
-}
-
-input UpdateAsset {
-  ID: ID!
-  Name: String
-  Description: String
+  URI: String!
 }
 
 extend type Mutation {
   createAsset(input: NewAsset!): Asset!
-  updateAsset(input: UpdateAsset!): Asset!
-  deleteAsset(id: ID!): Boolean!
-  uploadAsset(id: ID!): PresignedURL!
 }
 
 `, BuiltIn: false},
-	{Name: "../../../graphql/api/schema.graphql", Input: `# GraphQL schema example
+	{Name: "../../graphql/api/schema.graphql", Input: `# GraphQL schema example
 #
 # https://gqlgen.com/getting-started/
 
@@ -456,11 +345,6 @@ type Me {
   id: ID!
   name: String!
   email: String!
-}
-
-input Pagination {
-  count: Int!
-  page: Int!
 }
 
 type Query {
@@ -485,57 +369,12 @@ func (ec *executionContext) field_Mutation_createAsset_args(ctx context.Context,
 	var arg0 NewAsset
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNNewAsset2githubᚗcomᚋjugoᚑioᚋgoᚑpocᚋinternalᚋapiᚋgraphᚐNewAsset(ctx, tmp)
+		arg0, err = ec.unmarshalNNewAsset2githubᚗcomᚋjugoᚑioᚋgoᚑpocᚋapiᚋgraphᚐNewAsset(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
 	args["input"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_deleteAsset_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_updateAsset_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 UpdateAsset
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNUpdateAsset2githubᚗcomᚋjugoᚑioᚋgoᚑpocᚋinternalᚋapiᚋgraphᚐUpdateAsset(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_uploadAsset_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
 	return args, nil
 }
 
@@ -551,36 +390,6 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		}
 	}
 	args["name"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Query_asset_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Query_assets_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 *Pagination
-	if tmp, ok := rawArgs["pagination"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
-		arg0, err = ec.unmarshalOPagination2ᚖgithubᚗcomᚋjugoᚑioᚋgoᚑpocᚋinternalᚋapiᚋgraphᚐPagination(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["pagination"] = arg0
 	return args, nil
 }
 
@@ -654,6 +463,50 @@ func (ec *executionContext) _Asset_ID(ctx context.Context, field graphql.Collect
 }
 
 func (ec *executionContext) fieldContext_Asset_ID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Asset",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Asset_Owner(ctx context.Context, field graphql.CollectedField, obj *Asset) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Asset_Owner(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Owner, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Asset_Owner(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Asset",
 		Field:      field,
@@ -886,94 +739,6 @@ func (ec *executionContext) fieldContext_Asset_UpdatedAt(ctx context.Context, fi
 	return fc, nil
 }
 
-func (ec *executionContext) _Header_Key(ctx context.Context, field graphql.CollectedField, obj *Header) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Header_Key(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Key, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Header_Key(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Header",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Header_Value(ctx context.Context, field graphql.CollectedField, obj *Header) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Header_Value(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Value, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Header_Value(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Header",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Me_id(ctx context.Context, field graphql.CollectedField, obj *Me) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Me_id(ctx, field)
 	if err != nil {
@@ -1175,7 +940,7 @@ func (ec *executionContext) _Mutation_createAsset(ctx context.Context, field gra
 	}
 	res := resTmp.(Asset)
 	fc.Result = res
-	return ec.marshalNAsset2githubᚗcomᚋjugoᚑioᚋgoᚑpocᚋinternalᚋapiᚋgraphᚐAsset(ctx, field.Selections, res)
+	return ec.marshalNAsset2githubᚗcomᚋjugoᚑioᚋgoᚑpocᚋapiᚋgraphᚐAsset(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_createAsset(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1188,6 +953,8 @@ func (ec *executionContext) fieldContext_Mutation_createAsset(ctx context.Contex
 			switch field.Name {
 			case "ID":
 				return ec.fieldContext_Asset_ID(ctx, field)
+			case "Owner":
+				return ec.fieldContext_Asset_Owner(ctx, field)
 			case "Name":
 				return ec.fieldContext_Asset_Name(ctx, field)
 			case "Description":
@@ -1212,285 +979,6 @@ func (ec *executionContext) fieldContext_Mutation_createAsset(ctx context.Contex
 	if fc.Args, err = ec.field_Mutation_createAsset_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_updateAsset(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_updateAsset(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateAsset(rctx, fc.Args["input"].(UpdateAsset))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(Asset)
-	fc.Result = res
-	return ec.marshalNAsset2githubᚗcomᚋjugoᚑioᚋgoᚑpocᚋinternalᚋapiᚋgraphᚐAsset(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_updateAsset(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "ID":
-				return ec.fieldContext_Asset_ID(ctx, field)
-			case "Name":
-				return ec.fieldContext_Asset_Name(ctx, field)
-			case "Description":
-				return ec.fieldContext_Asset_Description(ctx, field)
-			case "URI":
-				return ec.fieldContext_Asset_URI(ctx, field)
-			case "CreatedAt":
-				return ec.fieldContext_Asset_CreatedAt(ctx, field)
-			case "UpdatedAt":
-				return ec.fieldContext_Asset_UpdatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Asset", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_updateAsset_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_deleteAsset(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_deleteAsset(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteAsset(rctx, fc.Args["id"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_deleteAsset(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_deleteAsset_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_uploadAsset(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_uploadAsset(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UploadAsset(rctx, fc.Args["id"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(PresignedURL)
-	fc.Result = res
-	return ec.marshalNPresignedURL2githubᚗcomᚋjugoᚑioᚋgoᚑpocᚋinternalᚋapiᚋgraphᚐPresignedURL(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_uploadAsset(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "URL":
-				return ec.fieldContext_PresignedURL_URL(ctx, field)
-			case "Fields":
-				return ec.fieldContext_PresignedURL_Fields(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type PresignedURL", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_uploadAsset_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _PresignedURL_URL(ctx context.Context, field graphql.CollectedField, obj *PresignedURL) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PresignedURL_URL(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.URL, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_PresignedURL_URL(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PresignedURL",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _PresignedURL_Fields(ctx context.Context, field graphql.CollectedField, obj *PresignedURL) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PresignedURL_Fields(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Fields, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]Header)
-	fc.Result = res
-	return ec.marshalNHeader2ᚕgithubᚗcomᚋjugoᚑioᚋgoᚑpocᚋinternalᚋapiᚋgraphᚐHeaderᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_PresignedURL_Fields(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PresignedURL",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "Key":
-				return ec.fieldContext_Header_Key(ctx, field)
-			case "Value":
-				return ec.fieldContext_Header_Value(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Header", field.Name)
-		},
 	}
 	return fc, nil
 }
@@ -1523,7 +1011,7 @@ func (ec *executionContext) _Query_me(ctx context.Context, field graphql.Collect
 	}
 	res := resTmp.(Me)
 	fc.Result = res
-	return ec.marshalNMe2githubᚗcomᚋjugoᚑioᚋgoᚑpocᚋinternalᚋapiᚋgraphᚐMe(ctx, field.Selections, res)
+	return ec.marshalNMe2githubᚗcomᚋjugoᚑioᚋgoᚑpocᚋapiᚋgraphᚐMe(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_me(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1561,7 +1049,7 @@ func (ec *executionContext) _Query_assets(ctx context.Context, field graphql.Col
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Assets(rctx, fc.Args["pagination"].(*Pagination))
+		return ec.resolvers.Query().Assets(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1575,7 +1063,7 @@ func (ec *executionContext) _Query_assets(ctx context.Context, field graphql.Col
 	}
 	res := resTmp.([]Asset)
 	fc.Result = res
-	return ec.marshalNAsset2ᚕgithubᚗcomᚋjugoᚑioᚋgoᚑpocᚋinternalᚋapiᚋgraphᚐAssetᚄ(ctx, field.Selections, res)
+	return ec.marshalNAsset2ᚕgithubᚗcomᚋjugoᚑioᚋgoᚑpocᚋapiᚋgraphᚐAssetᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_assets(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1588,6 +1076,8 @@ func (ec *executionContext) fieldContext_Query_assets(ctx context.Context, field
 			switch field.Name {
 			case "ID":
 				return ec.fieldContext_Asset_ID(ctx, field)
+			case "Owner":
+				return ec.fieldContext_Asset_Owner(ctx, field)
 			case "Name":
 				return ec.fieldContext_Asset_Name(ctx, field)
 			case "Description":
@@ -1601,83 +1091,6 @@ func (ec *executionContext) fieldContext_Query_assets(ctx context.Context, field
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Asset", field.Name)
 		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_assets_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_asset(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_asset(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Asset(rctx, fc.Args["id"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*Asset)
-	fc.Result = res
-	return ec.marshalOAsset2ᚖgithubᚗcomᚋjugoᚑioᚋgoᚑpocᚋinternalᚋapiᚋgraphᚐAsset(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_asset(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "ID":
-				return ec.fieldContext_Asset_ID(ctx, field)
-			case "Name":
-				return ec.fieldContext_Asset_Name(ctx, field)
-			case "Description":
-				return ec.fieldContext_Asset_Description(ctx, field)
-			case "URI":
-				return ec.fieldContext_Asset_URI(ctx, field)
-			case "CreatedAt":
-				return ec.fieldContext_Asset_CreatedAt(ctx, field)
-			case "UpdatedAt":
-				return ec.fieldContext_Asset_UpdatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Asset", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_asset_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
 	}
 	return fc, nil
 }
@@ -3591,7 +3004,7 @@ func (ec *executionContext) unmarshalInputNewAsset(ctx context.Context, obj inte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"Name", "Description"}
+	fieldsInOrder := [...]string{"Name", "Description", "URI"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -3612,81 +3025,13 @@ func (ec *executionContext) unmarshalInputNewAsset(ctx context.Context, obj inte
 				return it, err
 			}
 			it.Description = data
-		}
-	}
-
-	return it, nil
-}
-
-func (ec *executionContext) unmarshalInputPagination(ctx context.Context, obj interface{}) (Pagination, error) {
-	var it Pagination
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"count", "page"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "count":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("count"))
-			data, err := ec.unmarshalNInt2int(ctx, v)
+		case "URI":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("URI"))
+			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.Count = data
-		case "page":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("page"))
-			data, err := ec.unmarshalNInt2int(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Page = data
-		}
-	}
-
-	return it, nil
-}
-
-func (ec *executionContext) unmarshalInputUpdateAsset(ctx context.Context, obj interface{}) (UpdateAsset, error) {
-	var it UpdateAsset
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"ID", "Name", "Description"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "ID":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ID"))
-			data, err := ec.unmarshalNID2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ID = data
-		case "Name":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Name"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Name = data
-		case "Description":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Description"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Description = data
+			it.URI = data
 		}
 	}
 
@@ -3717,6 +3062,11 @@ func (ec *executionContext) _Asset(ctx context.Context, sel ast.SelectionSet, ob
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "Owner":
+			out.Values[i] = ec._Asset_Owner(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "Name":
 			out.Values[i] = ec._Asset_Name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -3739,50 +3089,6 @@ func (ec *executionContext) _Asset(ctx context.Context, sel ast.SelectionSet, ob
 			}
 		case "UpdatedAt":
 			out.Values[i] = ec._Asset_UpdatedAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var headerImplementors = []string{"Header"}
-
-func (ec *executionContext) _Header(ctx context.Context, sel ast.SelectionSet, obj *Header) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, headerImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("Header")
-		case "Key":
-			out.Values[i] = ec._Header_Key(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "Value":
-			out.Values[i] = ec._Header_Value(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -3888,71 +3194,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "updateAsset":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_updateAsset(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "deleteAsset":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_deleteAsset(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "uploadAsset":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_uploadAsset(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var presignedURLImplementors = []string{"PresignedURL"}
-
-func (ec *executionContext) _PresignedURL(ctx context.Context, sel ast.SelectionSet, obj *PresignedURL) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, presignedURLImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("PresignedURL")
-		case "URL":
-			out.Values[i] = ec._PresignedURL_URL(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "Fields":
-			out.Values[i] = ec._PresignedURL_Fields(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4030,25 +3271,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx,
-					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "asset":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_asset(ctx, field)
 				return res
 			}
 
@@ -4415,11 +3637,11 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNAsset2githubᚗcomᚋjugoᚑioᚋgoᚑpocᚋinternalᚋapiᚋgraphᚐAsset(ctx context.Context, sel ast.SelectionSet, v Asset) graphql.Marshaler {
+func (ec *executionContext) marshalNAsset2githubᚗcomᚋjugoᚑioᚋgoᚑpocᚋapiᚋgraphᚐAsset(ctx context.Context, sel ast.SelectionSet, v Asset) graphql.Marshaler {
 	return ec._Asset(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNAsset2ᚕgithubᚗcomᚋjugoᚑioᚋgoᚑpocᚋinternalᚋapiᚋgraphᚐAssetᚄ(ctx context.Context, sel ast.SelectionSet, v []Asset) graphql.Marshaler {
+func (ec *executionContext) marshalNAsset2ᚕgithubᚗcomᚋjugoᚑioᚋgoᚑpocᚋapiᚋgraphᚐAssetᚄ(ctx context.Context, sel ast.SelectionSet, v []Asset) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -4443,7 +3665,7 @@ func (ec *executionContext) marshalNAsset2ᚕgithubᚗcomᚋjugoᚑioᚋgoᚑpoc
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNAsset2githubᚗcomᚋjugoᚑioᚋgoᚑpocᚋinternalᚋapiᚋgraphᚐAsset(ctx, sel, v[i])
+			ret[i] = ec.marshalNAsset2githubᚗcomᚋjugoᚑioᚋgoᚑpocᚋapiᚋgraphᚐAsset(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -4478,54 +3700,6 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalNHeader2githubᚗcomᚋjugoᚑioᚋgoᚑpocᚋinternalᚋapiᚋgraphᚐHeader(ctx context.Context, sel ast.SelectionSet, v Header) graphql.Marshaler {
-	return ec._Header(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNHeader2ᚕgithubᚗcomᚋjugoᚑioᚋgoᚑpocᚋinternalᚋapiᚋgraphᚐHeaderᚄ(ctx context.Context, sel ast.SelectionSet, v []Header) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNHeader2githubᚗcomᚋjugoᚑioᚋgoᚑpocᚋinternalᚋapiᚋgraphᚐHeader(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalID(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -4541,32 +3715,13 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 	return res
 }
 
-func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
-	res, err := graphql.UnmarshalInt(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
-	res := graphql.MarshalInt(v)
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-	}
-	return res
-}
-
-func (ec *executionContext) marshalNMe2githubᚗcomᚋjugoᚑioᚋgoᚑpocᚋinternalᚋapiᚋgraphᚐMe(ctx context.Context, sel ast.SelectionSet, v Me) graphql.Marshaler {
+func (ec *executionContext) marshalNMe2githubᚗcomᚋjugoᚑioᚋgoᚑpocᚋapiᚋgraphᚐMe(ctx context.Context, sel ast.SelectionSet, v Me) graphql.Marshaler {
 	return ec._Me(ctx, sel, &v)
 }
 
-func (ec *executionContext) unmarshalNNewAsset2githubᚗcomᚋjugoᚑioᚋgoᚑpocᚋinternalᚋapiᚋgraphᚐNewAsset(ctx context.Context, v interface{}) (NewAsset, error) {
+func (ec *executionContext) unmarshalNNewAsset2githubᚗcomᚋjugoᚑioᚋgoᚑpocᚋapiᚋgraphᚐNewAsset(ctx context.Context, v interface{}) (NewAsset, error) {
 	res, err := ec.unmarshalInputNewAsset(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNPresignedURL2githubᚗcomᚋjugoᚑioᚋgoᚑpocᚋinternalᚋapiᚋgraphᚐPresignedURL(ctx context.Context, sel ast.SelectionSet, v PresignedURL) graphql.Marshaler {
-	return ec._PresignedURL(ctx, sel, &v)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
@@ -4597,11 +3752,6 @@ func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel as
 		}
 	}
 	return res
-}
-
-func (ec *executionContext) unmarshalNUpdateAsset2githubᚗcomᚋjugoᚑioᚋgoᚑpocᚋinternalᚋapiᚋgraphᚐUpdateAsset(ctx context.Context, v interface{}) (UpdateAsset, error) {
-	res, err := ec.unmarshalInputUpdateAsset(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
@@ -4857,13 +4007,6 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return res
 }
 
-func (ec *executionContext) marshalOAsset2ᚖgithubᚗcomᚋjugoᚑioᚋgoᚑpocᚋinternalᚋapiᚋgraphᚐAsset(ctx context.Context, sel ast.SelectionSet, v *Asset) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._Asset(ctx, sel, v)
-}
-
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -4888,14 +4031,6 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	}
 	res := graphql.MarshalBoolean(*v)
 	return res
-}
-
-func (ec *executionContext) unmarshalOPagination2ᚖgithubᚗcomᚋjugoᚑioᚋgoᚑpocᚋinternalᚋapiᚋgraphᚐPagination(ctx context.Context, v interface{}) (*Pagination, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputPagination(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
