@@ -4,27 +4,34 @@ import "github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 
 func main() {
 	pulumi.Run(func(ctx *pulumi.Context) error {
-		bucket, bucketOriginAccessIdentity, err := createBucket(ctx)
+		name := "jugo-go-lambda-poc"
+
+		bucket, err := createBucket(ctx, name)
 		if err != nil {
 			return err
 		}
 
-		tables, err := createDynamo(ctx)
+		bucketOriginAccessIdentity, err := createBucketCloudfrontOrigin(ctx, name, bucket)
 		if err != nil {
 			return err
 		}
 
-		function, err := createLambdas(ctx, tables.usersTable, tables.assetsTable)
+		tables, err := createDynamo(ctx, name)
 		if err != nil {
 			return err
 		}
 
-		apiGwEndpointWithoutProtocol, apiGwStageName, err := createApiGW(ctx, function)
+		function, err := createLambda(ctx, name, tables.usersTable, tables.assetsTable)
 		if err != nil {
 			return err
 		}
 
-		dist, err := createCloudfront(ctx, bucket, bucketOriginAccessIdentity, apiGwEndpointWithoutProtocol, apiGwStageName)
+		apiGwEndpointWithoutProtocol, apiGwStageName, err := createApiGW(ctx, name, function)
+		if err != nil {
+			return err
+		}
+
+		dist, err := createCloudfront(ctx, name, bucket, bucketOriginAccessIdentity, apiGwEndpointWithoutProtocol, apiGwStageName)
 		if err != nil {
 			return err
 		}

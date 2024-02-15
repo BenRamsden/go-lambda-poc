@@ -7,7 +7,7 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
-func createApiGW(ctx *pulumi.Context, function *lambda.Function) (*pulumi.StringOutput, *pulumi.String, error) {
+func createApiGW(ctx *pulumi.Context, name string, function *lambda.Function) (*pulumi.StringOutput, *pulumi.String, error) {
 	account, err := aws.GetCallerIdentity(ctx, nil)
 	if err != nil {
 		return nil, nil, err
@@ -19,9 +19,9 @@ func createApiGW(ctx *pulumi.Context, function *lambda.Function) (*pulumi.String
 	}
 
 	// Create a new API Gateway.
-	gateway, err := apigateway.NewRestApi(ctx, "UpperCaseGateway", &apigateway.RestApiArgs{
-		Name:        pulumi.String("UpperCaseGateway"),
-		Description: pulumi.String("An API Gateway for the UpperCase function"),
+	gateway, err := apigateway.NewRestApi(ctx, name+"-api-gw", &apigateway.RestApiArgs{
+		Name: pulumi.String(name + "-api-gw"),
+		// TODO: Narrow this down to just cloudfront
 		Policy: pulumi.String(`{
   "Version": "2012-10-17",
   "Statement": [
@@ -48,7 +48,7 @@ func createApiGW(ctx *pulumi.Context, function *lambda.Function) (*pulumi.String
 
 	// Add a resource to the API Gateway.
 	// This makes the API Gateway accept requests on "/{message}".
-	apiresource, err := apigateway.NewResource(ctx, "UpperAPI", &apigateway.ResourceArgs{
+	apiresource, err := apigateway.NewResource(ctx, name+"-api-gw-resource", &apigateway.ResourceArgs{
 		RestApi:  gateway.ID(),
 		PathPart: pulumi.String("{proxy+}"),
 		ParentId: gateway.RootResourceId,
@@ -58,7 +58,7 @@ func createApiGW(ctx *pulumi.Context, function *lambda.Function) (*pulumi.String
 	}
 
 	// Add a method to the API Gateway.
-	_, err = apigateway.NewMethod(ctx, "AnyMethod", &apigateway.MethodArgs{
+	_, err = apigateway.NewMethod(ctx, name+"-api-gw-any-method", &apigateway.MethodArgs{
 		HttpMethod:    pulumi.String("ANY"),
 		Authorization: pulumi.String("NONE"),
 		RestApi:       gateway.ID(),
@@ -70,7 +70,7 @@ func createApiGW(ctx *pulumi.Context, function *lambda.Function) (*pulumi.String
 
 	// Add an integration to the API Gateway.
 	// This makes communication between the API Gateway and the Lambda function work
-	_, err = apigateway.NewIntegration(ctx, "LambdaIntegration", &apigateway.IntegrationArgs{
+	_, err = apigateway.NewIntegration(ctx, name+"-lambda-integration", &apigateway.IntegrationArgs{
 		HttpMethod:            pulumi.String("ANY"),
 		IntegrationHttpMethod: pulumi.String("POST"),
 		ResourceId:            apiresource.ID(),
@@ -84,7 +84,7 @@ func createApiGW(ctx *pulumi.Context, function *lambda.Function) (*pulumi.String
 
 	// Add a resource based policy to the Lambda function.
 	// This is the final step and allows AWS API Gateway to communicate with the AWS Lambda function
-	permission, err := lambda.NewPermission(ctx, "APIPermission", &lambda.PermissionArgs{
+	permission, err := lambda.NewPermission(ctx, name+"-api-permission", &lambda.PermissionArgs{
 		Action:    pulumi.String("lambda:InvokeFunction"),
 		Function:  function.Name,
 		Principal: pulumi.String("apigateway.amazonaws.com"),
@@ -95,8 +95,7 @@ func createApiGW(ctx *pulumi.Context, function *lambda.Function) (*pulumi.String
 	}
 
 	// Create a new deployment
-	_, err = apigateway.NewDeployment(ctx, "APIDeployment", &apigateway.DeploymentArgs{
-		Description:      pulumi.String("UpperCase API deployment"),
+	_, err = apigateway.NewDeployment(ctx, name+"api-deployment", &apigateway.DeploymentArgs{
 		RestApi:          gateway.ID(),
 		StageDescription: pulumi.String("Production"),
 		StageName:        pulumi.String("prod"),

@@ -37,12 +37,12 @@ type DynamoTables struct {
 	assetsTable *dynamodb.Table
 }
 
-func createDynamo(ctx *pulumi.Context) (*DynamoTables, error) {
-	usersTable, err := createDynamoTable(ctx, "jugo-go-lambda-poc-users")
+func createDynamo(ctx *pulumi.Context, name string) (*DynamoTables, error) {
+	usersTable, err := createDynamoTable(ctx, name+"-users")
 	if err != nil {
 		return nil, err
 	}
-	assetsTable, err := createDynamoTable(ctx, "jugo-go-lambda-poc-assets")
+	assetsTable, err := createDynamoTable(ctx, name+"-assets")
 	if err != nil {
 		return nil, err
 	}

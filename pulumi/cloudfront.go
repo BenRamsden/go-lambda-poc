@@ -40,10 +40,10 @@ func createAPIOrderedCacheBehaviour(apiGwEndpointWithoutProtocol *pulumi.StringO
 	}
 }
 
-func createCloudfront(ctx *pulumi.Context, bucket *s3.BucketV2, bucketOriginAccessIdentity *cloudfront.OriginAccessIdentity, apiGwEndpointWithoutProtocol *pulumi.StringOutput, apiGwStageName *pulumi.String) (*cloudfront.Distribution, error) {
+func createCloudfront(ctx *pulumi.Context, name string, bucket *s3.BucketV2, bucketOriginAccessIdentity *cloudfront.OriginAccessIdentity, apiGwEndpointWithoutProtocol *pulumi.StringOutput, apiGwStageName *pulumi.String) (*cloudfront.Distribution, error) {
 	OriginId := bucket.Arn
 
-	dist, err := cloudfront.NewDistribution(ctx, "s3Distribution", &cloudfront.DistributionArgs{
+	dist, err := cloudfront.NewDistribution(ctx, name+"-cf-dist", &cloudfront.DistributionArgs{
 		Origins: cloudfront.DistributionOriginArray{
 			&cloudfront.DistributionOriginArgs{
 				OriginId:   OriginId,
@@ -120,9 +120,6 @@ func createCloudfront(ctx *pulumi.Context, bucket *s3.BucketV2, bucketOriginAcce
 				ResponseCode:     pulumi.Int(200),
 				ResponsePagePath: pulumi.String("/index.html"),
 			},
-		},
-		Tags: pulumi.StringMap{
-			"Environment": pulumi.String("sandbox"),
 		},
 		ViewerCertificate: &cloudfront.DistributionViewerCertificateArgs{
 			CloudfrontDefaultCertificate: pulumi.Bool(true),

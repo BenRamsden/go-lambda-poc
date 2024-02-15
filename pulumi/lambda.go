@@ -7,9 +7,9 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
-func createLambdas(ctx *pulumi.Context, usersTable *dynamodb.Table, assetsTable *dynamodb.Table) (*lambda.Function, error) {
+func createLambda(ctx *pulumi.Context, name string, usersTable *dynamodb.Table, assetsTable *dynamodb.Table) (*lambda.Function, error) {
 	// Create an IAM role.
-	role, err := iam.NewRole(ctx, "task-exec-role", &iam.RoleArgs{
+	role, err := iam.NewRole(ctx, name+"-task-exec-role", &iam.RoleArgs{
 		AssumeRolePolicy: pulumi.String(`{
 				"Version": "2012-10-17",
 				"Statement": [{
@@ -27,7 +27,7 @@ func createLambdas(ctx *pulumi.Context, usersTable *dynamodb.Table, assetsTable 
 	}
 
 	// Attach a policy to allow writing logs to CloudWatch
-	logPolicy, err := iam.NewRolePolicy(ctx, "lambda-log-policy", &iam.RolePolicyArgs{
+	logPolicy, err := iam.NewRolePolicy(ctx, name+"-lambda-log-policy", &iam.RolePolicyArgs{
 		Role: role.Name,
 		Policy: pulumi.String(`{
                 "Version": "2012-10-17",
@@ -43,7 +43,7 @@ func createLambdas(ctx *pulumi.Context, usersTable *dynamodb.Table, assetsTable 
             }`),
 	})
 
-	dynamoPolicy, err := iam.NewRolePolicy(ctx, "lambda-dynamo-policy", &iam.RolePolicyArgs{
+	dynamoPolicy, err := iam.NewRolePolicy(ctx, name+"-lambda-dynamo-policy", &iam.RolePolicyArgs{
 		Role: role.Name,
 		Policy: pulumi.Sprintf(`{
 			"Version": "2012-10-17",
@@ -66,29 +66,27 @@ func createLambdas(ctx *pulumi.Context, usersTable *dynamodb.Table, assetsTable 
 		}`, assetsTable.Arn, usersTable.Arn),
 	})
 
-	// Set arguments for constructing the function resource.
-	args := &lambda.FunctionArgs{
-		Handler: pulumi.String("handler"),
-		Role:    role.Arn,
-		Runtime: pulumi.String("provided.al2023"),
-		Code:    pulumi.NewFileArchive("../bin/lambda/api/api.zip"),
-		// Arm64
-		Architectures: pulumi.StringArray{
-			pulumi.String("arm64"),
-		},
-		Environment: lambda.FunctionEnvironmentArgs{
-			Variables: pulumi.StringMap{
-				"USERS_TABLE_NAME":  usersTable.Name,
-				"ASSETS_TABLE_NAME": assetsTable.Name,
-			},
-		},
-	}
-
 	// Create the lambda using the args.
 	function, err := lambda.NewFunction(
 		ctx,
-		"basicLambda",
-		args,
+		name+"-lambda",
+		&lambda.FunctionArgs{
+			Name:    pulumi.String(name + "-lambda"),
+			Handler: pulumi.String("handler"),
+			Role:    role.Arn,
+			Runtime: pulumi.String("provided.al2023"),
+			Code:    pulumi.NewFileArchive("../bin/lambda/api/api.zip"),
+			// Arm64
+			Architectures: pulumi.StringArray{
+				pulumi.String("arm64"),
+			},
+			Environment: lambda.FunctionEnvironmentArgs{
+				Variables: pulumi.StringMap{
+					"USERS_TABLE_NAME":  usersTable.Name,
+					"ASSETS_TABLE_NAME": assetsTable.Name,
+				},
+			},
+		},
 		pulumi.DependsOn([]pulumi.Resource{logPolicy, dynamoPolicy}),
 	)
 	if err != nil {
