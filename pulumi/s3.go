@@ -34,23 +34,18 @@ func crawlDirectory(dir string) ([]string, error) {
 	return filePaths, nil
 }
 
-func createBucket(ctx *pulumi.Context) (*s3.Bucket, error) {
-	bucket, err := s3.NewBucket(ctx, "jugo-go-lambda-poc", &s3.BucketArgs{
+func createBucket(ctx *pulumi.Context) (*s3.BucketV2, error) {
+	bucket, err := s3.NewBucketV2(ctx, "jugo-go-lambda-poc", &s3.BucketV2Args{
 		Bucket: pulumi.String("jugo-go-lambda-poc"),
-		Acl:    pulumi.String("private"),
 		Tags: pulumi.StringMap{
 			"environment": pulumi.String("sandbox"),
-		},
-		Website: &s3.BucketWebsiteArgs{
-			IndexDocument: pulumi.String("index.html"),
-			ErrorDocument: pulumi.String("index.html"),
 		},
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	// Allow public read access to all objects in the bucket
+	//Allow public read access to all objects in the bucket
 	_, err = s3.NewBucketPublicAccessBlock(ctx, "jugo-go-lambda-poc-public", &s3.BucketPublicAccessBlockArgs{
 		Bucket:                bucket.ID(),
 		BlockPublicAcls:       pulumi.Bool(false),
@@ -62,7 +57,7 @@ func createBucket(ctx *pulumi.Context) (*s3.Bucket, error) {
 		return nil, err
 	}
 
-	// Object Ownership, set ACLs enabled
+	//Object Ownership, set ACLs enabled
 	_, err = s3.NewBucketOwnershipControls(ctx, "jugo-go-lambda-poc-ownership", &s3.BucketOwnershipControlsArgs{
 		Bucket: bucket.ID(),
 		Rule: &s3.BucketOwnershipControlsRuleArgs{
@@ -70,11 +65,37 @@ func createBucket(ctx *pulumi.Context) (*s3.Bucket, error) {
 		},
 	})
 
+	// Set bucket acl to public-read
+	_, err = s3.NewBucketAclV2(ctx, "jugo-go-lambda-poc-acl", &s3.BucketAclV2Args{
+		Bucket: bucket.ID(),
+		Acl:    pulumi.String("public-read"),
+	})
+
+	_, err = s3.NewBucketPolicy(ctx, "jugo-go-lambda-poc-policy", &s3.BucketPolicyArgs{
+		Bucket: bucket.ID(),
+		Policy: pulumi.Sprintf(`{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "PublicReadGetObject",
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": [
+                "s3:GetObject"
+            ],
+            "Resource": [
+				"arn:aws:s3:::%s/*"
+            ]
+        }
+    ]
+}`, bucket.ID()),
+	})
+
 	files, err := crawlDirectory("../bin/ui")
 	for _, file := range files {
-		key := strings.Replace(file, "../bin/ui", "", 1)
+		key := strings.Replace(file, "../bin/ui/", "", 1)
 		mimeType := mime.TypeByExtension(key)
-		_, err := s3.NewBucketObject(ctx, key, &s3.BucketObjectArgs{
+		_, err := s3.NewBucketObjectv2(ctx, key, &s3.BucketObjectv2Args{
 			Bucket:      bucket.ID(),
 			Source:      pulumi.NewFileAsset(file),
 			Acl:         pulumi.String("public-read"),
