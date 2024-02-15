@@ -6,6 +6,12 @@
 npm install -g artillery@latest
 ```
 
+## Seed the database
+
+```
+artillery run assets-seed.yaml
+```
+
 ## Run
 
 ```

@@ -1,9 +1,8 @@
 config:
   target: "https://d3rgy3ald5nwqu.cloudfront.net"
-#  target: "http://98pw8kqfp0.execute-api.eu-west-1.amazonaws.com/prod/graphql"
   phases:
-    - duration: 30
-      arrivalRate: 50
+    - duration: 1
+      arrivalRate: 30
   http:
     defaults:
       headers:
@@ -15,13 +14,22 @@ scenarios:
           url: "/graphql"
           json:
             query: |
-              query Assets {
-                assets {
+              mutation CreateAsset($input: NewAsset!) {
+                createAsset(input: $input) {
                   ID
                   Name
                   Description
                   URI
                   CreatedAt
                   UpdatedAt
+                  Owner
                 }
               }
+            variables:
+              input:
+                Name: "artillery-asset-name-{{ $randomString() }}"
+                Description: "artillery-asset-description-{{ $randomString() }}"
+                URI: "s3://artillery-fake-bucket/{{ $randomString() }}"
+          capture:
+            - json: "$.data.createAsset.ID"
+              as: "assetId"

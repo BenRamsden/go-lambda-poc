@@ -85,7 +85,7 @@ func createLambda(ctx *pulumi.Context, name string, usersTable *dynamodb.Table, 
 				Variables: pulumi.StringMap{
 					"USERS_TABLE_NAME":  usersTable.Name,
 					"ASSETS_TABLE_NAME": assetsTable.Name,
-					"AUTH0_AUDIENCE":    pulumi.String("http://localhost:4000/graphql"),
+					"AUTH0_AUDIENCE":    pulumi.String("https://graphql.sandbox.jugo.io/graphql"),
 					"AUTH0_DOMAIN":      pulumi.String("https://auth.sandbox.jugo.io/"),
 					"GIN_MODE":          pulumi.String("release"),
 				},
