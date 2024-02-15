@@ -55,7 +55,8 @@ func createLambda(ctx *pulumi.Context, name string, usersTable *dynamodb.Table, 
 						"dynamodb:BatchWriteItem",
 						"dynamodb:DeleteItem",
 						"dynamodb:GetItem",
-						"dynamodb:PutItem"
+						"dynamodb:PutItem",
+						"dynamodb:Query"
 					],
 					"Resource": [
 						"%s",	
@@ -84,6 +85,8 @@ func createLambda(ctx *pulumi.Context, name string, usersTable *dynamodb.Table, 
 				Variables: pulumi.StringMap{
 					"USERS_TABLE_NAME":  usersTable.Name,
 					"ASSETS_TABLE_NAME": assetsTable.Name,
+					"AUTH0_AUDIENCE":    pulumi.String("http://localhost:4000/graphql"),
+					"AUTH0_DOMAIN":      pulumi.String("https://auth.sandbox.jugo.io/"),
 				},
 			},
 		},
