@@ -122,7 +122,5 @@ func createBucket(ctx *pulumi.Context) (*s3.BucketV2, *cloudfront.OriginAccessId
 		}
 	}
 
-	// Export the name of the bucket
-	ctx.Export("bucketName", bucket.ID())
 	return bucket, bucketOriginAccessIdentity, nil
 }

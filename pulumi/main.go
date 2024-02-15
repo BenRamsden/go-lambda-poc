@@ -9,7 +9,12 @@ func main() {
 			return err
 		}
 
-		apiGwEndpointWithoutProtocol, apiGwStageName, err := createLambdas(ctx)
+		tables, err := createDynamo(ctx)
+		if err != nil {
+			return err
+		}
+
+		apiGwEndpointWithoutProtocol, apiGwStageName, err := createLambdas(ctx, tables.usersTable, tables.assetsTable)
 		if err != nil {
 			return err
 		}
@@ -19,9 +24,10 @@ func main() {
 			return err
 		}
 
-		pulumi.Printf("Bucket name: %s\n", bucket.ID())
-		pulumi.Printf("Invocation URL: https://%s\n", apiGwEndpointWithoutProtocol)
-		pulumi.Printf("Website URL: http://%s\n", dist.DomainName)
+		ctx.Export("BucketName", bucket.ID())
+		ctx.Export("APIGatewayURI", apiGwEndpointWithoutProtocol)
+		ctx.Export("CloudfrontURI", dist.DomainName)
+		ctx.Export("DynamoDBTables", pulumi.StringArray{tables.usersTable.Name, tables.assetsTable.Name})
 
 		return nil
 	})

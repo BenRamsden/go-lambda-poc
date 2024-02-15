@@ -3,12 +3,13 @@ package main
 import (
 	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws"
 	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/apigateway"
+	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/dynamodb"
 	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/iam"
 	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/lambda"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
-func createLambdas(ctx *pulumi.Context) (*pulumi.StringOutput, *pulumi.String, error) {
+func createLambdas(ctx *pulumi.Context, usersTable *dynamodb.Table, assetsTable *dynamodb.Table) (*pulumi.StringOutput, *pulumi.String, error) {
 	account, err := aws.GetCallerIdentity(ctx, nil)
 	if err != nil {
 		return nil, nil, err
@@ -54,6 +55,29 @@ func createLambdas(ctx *pulumi.Context) (*pulumi.StringOutput, *pulumi.String, e
             }`),
 	})
 
+	dynamoPolicy, err := iam.NewRolePolicy(ctx, "lambda-dynamo-policy", &iam.RolePolicyArgs{
+		Role: role.Name,
+		Policy: pulumi.Sprintf(`{
+			"Version": "2012-10-17",
+			"Statement": [
+				{
+					"Effect": "Allow",
+					"Action": [
+						"dynamodb:BatchGetItem",
+						"dynamodb:BatchWriteItem",
+						"dynamodb:DeleteItem",
+						"dynamodb:GetItem",
+						"dynamodb:PutItem"
+					],
+					"Resource": [
+						"%s",	
+						"%s"	
+					]
+				}
+			]
+		}`, assetsTable.Arn, usersTable.Arn),
+	})
+
 	// Set arguments for constructing the function resource.
 	args := &lambda.FunctionArgs{
 		Handler: pulumi.String("handler"),
@@ -71,7 +95,7 @@ func createLambdas(ctx *pulumi.Context) (*pulumi.StringOutput, *pulumi.String, e
 		ctx,
 		"basicLambda",
 		args,
-		pulumi.DependsOn([]pulumi.Resource{logPolicy}),
+		pulumi.DependsOn([]pulumi.Resource{logPolicy, dynamoPolicy}),
 	)
 	if err != nil {
 		return nil, nil, err
