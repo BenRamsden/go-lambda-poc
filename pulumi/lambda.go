@@ -88,6 +88,12 @@ func createLambdas(ctx *pulumi.Context, usersTable *dynamodb.Table, assetsTable 
 		Architectures: pulumi.StringArray{
 			pulumi.String("arm64"),
 		},
+		Environment: lambda.FunctionEnvironmentArgs{
+			Variables: pulumi.StringMap{
+				"USERS_TABLE_NAME":  usersTable.Name,
+				"ASSETS_TABLE_NAME": assetsTable.Name,
+			},
+		},
 	}
 
 	// Create the lambda using the args.
