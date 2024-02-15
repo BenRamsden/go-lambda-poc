@@ -14,7 +14,12 @@ func main() {
 			return err
 		}
 
-		apiGwEndpointWithoutProtocol, apiGwStageName, err := createLambdas(ctx, tables.usersTable, tables.assetsTable)
+		function, err := createLambdas(ctx, tables.usersTable, tables.assetsTable)
+		if err != nil {
+			return err
+		}
+
+		apiGwEndpointWithoutProtocol, apiGwStageName, err := createApiGW(ctx, function)
 		if err != nil {
 			return err
 		}
