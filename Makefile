@@ -31,4 +31,6 @@ package:
 	done
 	@echo "Building UI"
 	@cd ui && yarn package
-	
+
+deploy:
+	cd pulumi && pulumi up -y
