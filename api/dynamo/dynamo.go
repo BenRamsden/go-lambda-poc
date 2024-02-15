@@ -23,15 +23,6 @@ func New(client *dynamodb.Client) Repository {
 	if client == nil {
 		panic("nil dynamodb client")
 	}
-	resp, err := client.ListTables(context.TODO(), &dynamodb.ListTablesInput{
-		Limit: aws.Int32(5),
-	})
-	if err != nil {
-		panic(err)
-	}
-	for _, table := range resp.TableNames {
-		fmt.Println(table)
-	}
 
 	return &repository{client}
 }
