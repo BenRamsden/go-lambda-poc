@@ -1,13 +1,14 @@
 package main
 
 import (
+	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/cognito"
 	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/dynamodb"
 	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/iam"
 	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/lambda"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
-func createLambda(ctx *pulumi.Context, name string, usersTable *dynamodb.Table, assetsTable *dynamodb.Table) (*lambda.Function, error) {
+func createLambda(ctx *pulumi.Context, name string, usersTable *dynamodb.Table, assetsTable *dynamodb.Table, userPool *cognito.UserPool) (*lambda.Function, error) {
 	// Create an IAM role.
 	role, err := iam.NewRole(ctx, name+"-task-exec-role", &iam.RoleArgs{
 		AssumeRolePolicy: pulumi.String(`{
@@ -67,6 +68,30 @@ func createLambda(ctx *pulumi.Context, name string, usersTable *dynamodb.Table, 
 		}`, assetsTable.Arn, usersTable.Arn),
 	})
 
+	cognitoPolicy, err := iam.NewRolePolicy(ctx, name+"-lambda-cognito-policy", &iam.RolePolicyArgs{
+		Role: role.Name,
+		Policy: pulumi.Sprintf(`{
+			"Version": "2012-10-17",
+			"Statement": [
+				{
+					"Effect": "Allow",
+					"Action": [	
+						"cognito-idp:AdminCreateUser",
+						"cognito-idp:AdminUpdateUserAttributes",	
+						"cognito-idp:AdminSetUserPassword",
+						"cognito-idp:AdminGetUser",	
+						"cognito-idp:AdminDeleteUser",	
+						"cognito-idp:AdminAddUserToGroup",
+						"cognito-idp:AdminRemoveUserFromGroup"
+			        ],
+					"Resource": [
+						"%s"	
+					]
+				}
+ 			]
+		}`, userPool.Arn),
+	})
+
 	// Create the lambda using the args.
 	function, err := lambda.NewFunction(
 		ctx,
@@ -88,10 +113,11 @@ func createLambda(ctx *pulumi.Context, name string, usersTable *dynamodb.Table, 
 					"AUTH0_AUDIENCE":    pulumi.String("https://graphql.sandbox.jugo.io/graphql"),
 					"AUTH0_DOMAIN":      pulumi.String("https://auth.sandbox.jugo.io/"),
 					"GIN_MODE":          pulumi.String("release"),
+					"COGNITO_USER_POOL": userPool.Name,
 				},
 			},
 		},
-		pulumi.DependsOn([]pulumi.Resource{logPolicy, dynamoPolicy}),
+		pulumi.DependsOn([]pulumi.Resource{logPolicy, dynamoPolicy, cognitoPolicy}),
 	)
 	if err != nil {
 		return nil, err

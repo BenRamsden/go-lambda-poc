@@ -9,6 +9,11 @@ func main() {
 		// TODO: Fetch root account zone id
 		// TODO: Create poc.sandbox.jugo.io subdomain
 
+		userPool, err := createCognito(ctx, name)
+		if err != nil {
+			return err
+		}
+
 		bucket, err := createBucket(ctx, name)
 		if err != nil {
 			return err
@@ -24,7 +29,7 @@ func main() {
 			return err
 		}
 
-		function, err := createLambda(ctx, name, tables.usersTable, tables.assetsTable)
+		function, err := createLambda(ctx, name, tables.usersTable, tables.assetsTable, userPool)
 		if err != nil {
 			return err
 		}
