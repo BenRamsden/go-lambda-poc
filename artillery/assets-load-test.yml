@@ -1,15 +1,14 @@
 config:
-  target: "https://d3rgy3ald5nwqu.cloudfront.net"
-#  target: "http://98pw8kqfp0.execute-api.eu-west-1.amazonaws.com/prod/graphql"
+  target: "https://poc.sandbox.jugo.io"
   phases:
     - duration: 30
       arrivalRate: 50
   http:
     defaults:
       headers:
-        Authorization: "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IlRxZV9Nc1d0ZHJ1MnFaWGJXOWJOMSJ9.eyJlbWFpbCI6ImJlbi5yYW1zZGVuQGp1Z28uaW8iLCJpc3MiOiJodHRwczovL2F1dGguc2FuZGJveC5qdWdvLmlvLyIsInN1YiI6ImF1dGgwfDYyZTc4ODcwNjVmN2ZiYTE3MWRmZTEyYyIsImF1ZCI6WyJodHRwczovL2dyYXBocWwuc2FuZGJveC5qdWdvLmlvL2dyYXBocWwiLCJodHRwczovL2p1Z28tc2FuZGJveC5ldS5hdXRoMC5jb20vdXNlcmluZm8iXSwiaWF0IjoxNzA4MDA4MjQ5LCJleHAiOjE3MDgwOTQ2NDksImF6cCI6IjNidlZZYlJsdU1GalFKcTM3TGlUcFRjRDNPcEVhRVluIiwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCBvZmZsaW5lX2FjY2VzcyJ9.GC8wrmIeAnpqt2nf9sFJdi254uvnYlgX-J9FuDiFXkK-wlZQdk4z_OErd_jbdIDkFxrwFu1_PXZTPeHzigHvYuwjj-KVVOrjZ-zDRyp88OKMm-k4eIsDsrMbet6GifeXOkeef7iSREmoWhD02VyugLpnoM0NcaVYvPSxyty22wje-ocD47s1DeP5Z0lVzXYAKAygqhlX6kWmjhJ3LprXSTh6vNTq_rtwx5sO8w8pDJ_nGSEaYZViOHGLIUz6eQ1JyNN82k8IP7EBYOpjeyYFlSRZp6akwJLX6cqliLWn1HCHDEWDe1woa1KHGH3sf4hbnC0KM4spqVkex_E9drw2AQ"
+        Authorization: "{{ $env.TOKEN }}"
 scenarios:
-  - name: "Create assets"
+  - name: "Get assets"
     flow:
       - post:
           url: "/graphql"
@@ -25,3 +24,7 @@ scenarios:
                   UpdatedAt
                 }
               }
+#          capture:
+#            - json: "$"
+#              as: "body"
+#      - log: "Response: {{ body }}"

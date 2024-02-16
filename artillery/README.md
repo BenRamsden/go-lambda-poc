@@ -9,12 +9,14 @@ npm install -g artillery@latest
 ## Seed the database
 
 ```
+export TOKEN="Bearer <token>"
 artillery run assets-seed.yaml
 ```
 
 ## Run
 
 ```
+export TOKEN="Bearer <token>"
 artillery run assets-load-test.yaml
 ```
 
