@@ -33,7 +33,7 @@ func crawlDirectory(dir string) ([]string, error) {
 	return filePaths, nil
 }
 
-func createBucket(ctx *pulumi.Context, name string) (*s3.BucketV2, error) {
+func createFrontendBucket(ctx *pulumi.Context, name string) (*s3.BucketV2, error) {
 	bucket, err := s3.NewBucketV2(ctx, name, &s3.BucketV2Args{
 		Bucket: pulumi.String(name),
 	})
@@ -41,7 +41,7 @@ func createBucket(ctx *pulumi.Context, name string) (*s3.BucketV2, error) {
 		return nil, err
 	}
 
-	//Allow public read access to all objects in the bucket
+	//Allow public read access to all objects in the frontendBucket
 	pab, err := s3.NewBucketPublicAccessBlock(ctx, name+"-public", &s3.BucketPublicAccessBlockArgs{
 		Bucket:                bucket.ID(),
 		BlockPublicAcls:       pulumi.Bool(false),
@@ -61,7 +61,7 @@ func createBucket(ctx *pulumi.Context, name string) (*s3.BucketV2, error) {
 		},
 	})
 
-	// Set bucket acl to public-read
+	// Set frontendBucket acl to public-read
 	_, err = s3.NewBucketAclV2(ctx, name+"-acl", &s3.BucketAclV2Args{
 		Bucket: bucket.ID(),
 		Acl:    pulumi.String("public-read"),

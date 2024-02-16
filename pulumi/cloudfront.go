@@ -41,7 +41,8 @@ func createAPIOrderedCacheBehaviour(apiGwEndpointWithoutProtocol *pulumi.StringO
 }
 
 type CreateCloudfrontArgs struct {
-	bucket                       *s3.BucketV2
+	frontendBucket               *s3.BucketV2
+	loggingBucket                *s3.BucketV2
 	bucketOriginAccessIdentity   *cloudfront.OriginAccessIdentity
 	apiGwEndpointWithoutProtocol *pulumi.StringOutput
 	apiGwStageName               *pulumi.String
@@ -50,13 +51,13 @@ type CreateCloudfrontArgs struct {
 }
 
 func createCloudfront(ctx *pulumi.Context, name string, args *CreateCloudfrontArgs) (*cloudfront.Distribution, error) {
-	OriginId := args.bucket.Arn
+	OriginId := args.frontendBucket.Arn
 
 	dist, err := cloudfront.NewDistribution(ctx, name+"-cf-dist", &cloudfront.DistributionArgs{
 		Origins: cloudfront.DistributionOriginArray{
 			&cloudfront.DistributionOriginArgs{
 				OriginId:   OriginId,
-				DomainName: args.bucket.BucketRegionalDomainName,
+				DomainName: args.frontendBucket.BucketRegionalDomainName,
 				S3OriginConfig: cloudfront.DistributionOriginS3OriginConfigArgs{
 					OriginAccessIdentity: args.bucketOriginAccessIdentity.CloudfrontAccessIdentityPath,
 				},
@@ -79,11 +80,10 @@ func createCloudfront(ctx *pulumi.Context, name string, args *CreateCloudfrontAr
 		IsIpv6Enabled:     pulumi.Bool(true),
 		Comment:           pulumi.String("Some comment"),
 		DefaultRootObject: pulumi.String("index.html"),
-		//LoggingConfig: &cloudfront.DistributionLoggingConfigArgs{
-		//	IncludeCookies: pulumi.Bool(false),
-		//	Bucket:         pulumi.String("mylogs.s3.amazonaws.com"),
-		//	Prefix:         pulumi.String("myprefix"),
-		//},
+		LoggingConfig: &cloudfront.DistributionLoggingConfigArgs{
+			IncludeCookies: pulumi.Bool(false),
+			Bucket:         args.loggingBucket.BucketDomainName,
+		},
 		DefaultCacheBehavior: &cloudfront.DistributionDefaultCacheBehaviorArgs{
 			AllowedMethods: pulumi.StringArray{
 				pulumi.String("DELETE"),
@@ -144,4 +144,23 @@ func createCloudfront(ctx *pulumi.Context, name string, args *CreateCloudfrontAr
 		return nil, err
 	}
 	return dist, nil
+}
+
+func createLoggingBucket(ctx *pulumi.Context, name string) (*s3.BucketV2, error) {
+	loggingBucket, err := s3.NewBucketV2(ctx, name+"-logs", &s3.BucketV2Args{
+		Bucket: pulumi.String(name + "-logs"),
+	})
+	if err != nil {
+		return nil, err
+	}
+	_, err = s3.NewBucketOwnershipControls(ctx, name+"-logs-ownership", &s3.BucketOwnershipControlsArgs{
+		Bucket: loggingBucket.ID(),
+		Rule: &s3.BucketOwnershipControlsRuleArgs{
+			ObjectOwnership: pulumi.String("BucketOwnerPreferred"),
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return loggingBucket, nil
 }

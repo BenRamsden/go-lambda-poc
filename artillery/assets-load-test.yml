@@ -2,7 +2,7 @@ config:
   target: "https://poc.sandbox.jugo.io"
   phases:
     - duration: 30
-      arrivalRate: 50
+      arrivalRate: 100
   http:
     defaults:
       headers:

@@ -23,12 +23,17 @@ func main() {
 		}
 		targetUrl := pulumi.String(poc.Require("targetUrl"))
 
-		bucket, err := createBucket(ctx, name)
+		frontendBucket, err := createFrontendBucket(ctx, name)
 		if err != nil {
 			return err
 		}
 
-		bucketOriginAccessIdentity, err := createBucketCloudfrontOrigin(ctx, name, &CreateBucketCloudfrontOriginArgs{bucket: bucket})
+		loggingBucket, err := createLoggingBucket(ctx, name)
+		if err != nil {
+			return err
+		}
+
+		bucketOriginAccessIdentity, err := createBucketCloudfrontOrigin(ctx, name, &CreateBucketCloudfrontOriginArgs{bucket: frontendBucket})
 		if err != nil {
 			return err
 		}
@@ -49,7 +54,8 @@ func main() {
 		}
 
 		dist, err := createCloudfront(ctx, name, &CreateCloudfrontArgs{
-			bucket:                       bucket,
+			frontendBucket:               frontendBucket,
+			loggingBucket:                loggingBucket,
 			bucketOriginAccessIdentity:   bucketOriginAccessIdentity,
 			apiGwEndpointWithoutProtocol: apiGwEndpointWithoutProtocol,
 			apiGwStageName:               apiGwStageName,
@@ -65,7 +71,7 @@ func main() {
 			return err
 		}
 
-		ctx.Export("BucketName", bucket.ID())
+		ctx.Export("BucketName", frontendBucket.ID())
 		ctx.Export("APIGatewayURI", apiGwEndpointWithoutProtocol)
 		ctx.Export("CloudfrontURI", dist.DomainName)
 		ctx.Export("DynamoDBTables", pulumi.StringArray{tables.usersTable.Name, tables.assetsTable.Name})
