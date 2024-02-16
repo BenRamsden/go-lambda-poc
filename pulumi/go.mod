@@ -6,7 +6,7 @@ toolchain go1.21.3
 
 require (
 	github.com/pulumi/pulumi-aws/sdk/v6 v6.18.0
-	github.com/pulumi/pulumi/sdk/v3 v3.102.0
+	github.com/pulumi/pulumi/sdk/v3 v3.106.0
 )
 
 require (
@@ -66,6 +66,7 @@ require (
 	github.com/santhosh-tekuri/jsonschema/v5 v5.0.0 // indirect
 	github.com/sergi/go-diff v1.3.1 // indirect
 	github.com/skeema/knownhosts v1.2.1 // indirect
+	github.com/spf13/cast v1.4.1 // indirect
 	github.com/spf13/cobra v1.7.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/texttheater/golang-levenshtein v1.0.1 // indirect

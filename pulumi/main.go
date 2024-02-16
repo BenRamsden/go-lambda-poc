@@ -1,6 +1,9 @@
 package main
 
-import "github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+import (
+	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
+)
 
 func main() {
 	pulumi.Run(func(ctx *pulumi.Context) error {
@@ -11,9 +14,14 @@ func main() {
 		if err != nil {
 			return err
 		}
-
-		acmCertArn := base.GetStringOutput(pulumi.String("cloudFrontAcmCertArn"))
+		cloudFrontAcmCertArn := base.GetStringOutput(pulumi.String("cloudFrontAcmCertArn"))
 		hostedZoneId := base.GetStringOutput(pulumi.String("zoneId"))
+
+		poc := config.New(ctx, "jugo-go-lambda-poc")
+		if err != nil {
+			return err
+		}
+		targetUrl := pulumi.String(poc.Require("targetUrl"))
 
 		bucket, err := createBucket(ctx, name)
 		if err != nil {
@@ -45,13 +53,14 @@ func main() {
 			bucketOriginAccessIdentity:   bucketOriginAccessIdentity,
 			apiGwEndpointWithoutProtocol: apiGwEndpointWithoutProtocol,
 			apiGwStageName:               apiGwStageName,
-			acmCertArn:                   acmCertArn,
+			cloudFrontAcmCertArn:         cloudFrontAcmCertArn,
+			targetUrl:                    targetUrl,
 		})
 		if err != nil {
 			return err
 		}
 
-		pocARecord, err := createARecord(ctx, name, &CreateARecordArgs{hostedZoneId: hostedZoneId, dist: dist})
+		pocARecord, err := createARecord(ctx, name, &CreateARecordArgs{hostedZoneId: hostedZoneId, dist: dist, targetUrl: targetUrl})
 		if err != nil {
 			return err
 		}

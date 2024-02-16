@@ -278,6 +278,8 @@ github.com/pulumi/pulumi-aws/sdk/v6 v6.18.0/go.mod h1:q9xiDT6K+AU1jpYIcNKkCRIYr3
 github.com/pulumi/pulumi/pkg/v3 v3.98.0/go.mod h1:aeQmrCMwvMOIz1s6qOk+vg1oCWff5hmeRrg1vYv8eRU=
 github.com/pulumi/pulumi/sdk/v3 v3.102.0 h1:r5mKh7twIjoDhVFxm2HNQyXYmxsffm2J7YJd5KWCguM=
 github.com/pulumi/pulumi/sdk/v3 v3.102.0/go.mod h1:Ml3rpGfyZlI4zQCG7LN2XDSmH4XUNYdyBwJ3yEr/OpI=
+github.com/pulumi/pulumi/sdk/v3 v3.106.0 h1:Og3sPKC3SJ2xyQ0dF5si6C126SwcR6rm4lupHh83ELk=
+github.com/pulumi/pulumi/sdk/v3 v3.106.0/go.mod h1:Ml3rpGfyZlI4zQCG7LN2XDSmH4XUNYdyBwJ3yEr/OpI=
 github.com/rivo/uniseg v0.1.0/go.mod h1:J6wj4VEh+S6ZtnVlnTBMWIodfgj8LQOQFoIToxlJtxc=
 github.com/rivo/uniseg v0.2.0/go.mod h1:J6wj4VEh+S6ZtnVlnTBMWIodfgj8LQOQFoIToxlJtxc=
 github.com/rivo/uniseg v0.4.4 h1:8TfxU8dW6PdqD27gjM8MVNuicgxIjxpm4K7x4jp8sis=
@@ -299,6 +301,7 @@ github.com/sirupsen/logrus v1.7.0/go.mod h1:yWOB1SBYBC5VeMP7gHvWumXLIWorT60ONWic
 github.com/sirupsen/logrus v1.9.0/go.mod h1:naHLuLoDiP4jHNo9R0sCBMtWGeIprob74mVsIT4qYEQ=
 github.com/skeema/knownhosts v1.2.1 h1:SHWdIUa82uGZz+F+47k8SY4QhhI291cXCpopT1lK2AQ=
 github.com/skeema/knownhosts v1.2.1/go.mod h1:xYbVRSPxqBZFrdmDyMmsOs+uX1UZC3nTN3ThzgDxUwo=
+github.com/spf13/cast v1.4.1 h1:s0hze+J0196ZfEMTs80N7UlFt0BDuQ7Q+JDnHiMWKdA=
 github.com/spf13/cast v1.4.1/go.mod h1:Qx5cxh0v+4UWYiBimWS+eyWzqEqokIECu5etghLkUJE=
 github.com/spf13/cobra v1.7.0 h1:hyqWnYt1ZQShIddO5kBpj3vu05/++x6tJ6dg8EC572I=
 github.com/spf13/cobra v1.7.0/go.mod h1:uLxZILRyS/50WlhOIKD7W6V5bgeIt+4sICxh6uRMrb0=

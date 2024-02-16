@@ -45,7 +45,8 @@ type CreateCloudfrontArgs struct {
 	bucketOriginAccessIdentity   *cloudfront.OriginAccessIdentity
 	apiGwEndpointWithoutProtocol *pulumi.StringOutput
 	apiGwStageName               *pulumi.String
-	acmCertArn                   pulumi.StringOutput
+	cloudFrontAcmCertArn         pulumi.StringOutput
+	targetUrl                    pulumi.String
 }
 
 func createCloudfront(ctx *pulumi.Context, name string, args *CreateCloudfrontArgs) (*cloudfront.Distribution, error) {
@@ -130,8 +131,12 @@ func createCloudfront(ctx *pulumi.Context, name string, args *CreateCloudfrontAr
 			},
 		},
 		ViewerCertificate: &cloudfront.DistributionViewerCertificateArgs{
-			AcmCertificateArn: args.acmCertArn,
-			SslSupportMethod:  pulumi.String("sni-only"),
+			AcmCertificateArn:      args.cloudFrontAcmCertArn,
+			SslSupportMethod:       pulumi.String("sni-only"),
+			MinimumProtocolVersion: pulumi.String("TLSv1.2_2021"),
+		},
+		Aliases: pulumi.StringArray{
+			args.targetUrl,
 		},
 	})
 

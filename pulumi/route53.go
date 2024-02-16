@@ -9,11 +9,12 @@ import (
 type CreateARecordArgs struct {
 	hostedZoneId pulumi.StringOutput
 	dist         *cloudfront.Distribution
+	targetUrl    pulumi.String
 }
 
 func createARecord(ctx *pulumi.Context, name string, args *CreateARecordArgs) (*route53.Record, error) {
 	record, err := route53.NewRecord(ctx, name+"-a-record", &route53.RecordArgs{
-		Name:   pulumi.String("poc.sandbox.jugo.io"),
+		Name:   args.targetUrl,
 		ZoneId: args.hostedZoneId,
 		Type:   pulumi.String("A"),
 		Aliases: route53.RecordAliasArray{&route53.RecordAliasArgs{
