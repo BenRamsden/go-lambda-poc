@@ -6,15 +6,21 @@ func main() {
 	pulumi.Run(func(ctx *pulumi.Context) error {
 		name := "jugo-go-lambda-poc"
 
-		// TODO: Fetch root account zone id
-		// TODO: Create poc.sandbox.jugo.io subdomain
+		// Stack reference to jugo-sandbox-base
+		base, err := pulumi.NewStackReference(ctx, "jugo-sandbox-base", nil)
+		if err != nil {
+			return err
+		}
+
+		acmCertArn := base.GetStringOutput(pulumi.String("cloudFrontAcmCertArn"))
+		hostedZoneId := base.GetStringOutput(pulumi.String("zoneId"))
 
 		bucket, err := createBucket(ctx, name)
 		if err != nil {
 			return err
 		}
 
-		bucketOriginAccessIdentity, err := createBucketCloudfrontOrigin(ctx, name, bucket)
+		bucketOriginAccessIdentity, err := createBucketCloudfrontOrigin(ctx, name, &CreateBucketCloudfrontOriginArgs{bucket: bucket})
 		if err != nil {
 			return err
 		}
@@ -24,17 +30,28 @@ func main() {
 			return err
 		}
 
-		function, err := createLambda(ctx, name, tables.usersTable, tables.assetsTable)
+		function, err := createLambda(ctx, name, &CreateLambdaArgs{usersTable: tables.usersTable, assetsTable: tables.assetsTable})
 		if err != nil {
 			return err
 		}
 
-		apiGwEndpointWithoutProtocol, apiGwStageName, err := createApiGW(ctx, name, function)
+		apiGwEndpointWithoutProtocol, apiGwStageName, err := createApiGW(ctx, name, &CreateApiGWArgs{function: function})
 		if err != nil {
 			return err
 		}
 
-		dist, err := createCloudfront(ctx, name, bucket, bucketOriginAccessIdentity, apiGwEndpointWithoutProtocol, apiGwStageName)
+		dist, err := createCloudfront(ctx, name, &CreateCloudfrontArgs{
+			bucket:                       bucket,
+			bucketOriginAccessIdentity:   bucketOriginAccessIdentity,
+			apiGwEndpointWithoutProtocol: apiGwEndpointWithoutProtocol,
+			apiGwStageName:               apiGwStageName,
+			acmCertArn:                   acmCertArn,
+		})
+		if err != nil {
+			return err
+		}
+
+		pocARecord, err := createARecord(ctx, name, &CreateARecordArgs{hostedZoneId: hostedZoneId, dist: dist})
 		if err != nil {
 			return err
 		}
@@ -43,6 +60,7 @@ func main() {
 		ctx.Export("APIGatewayURI", apiGwEndpointWithoutProtocol)
 		ctx.Export("CloudfrontURI", dist.DomainName)
 		ctx.Export("DynamoDBTables", pulumi.StringArray{tables.usersTable.Name, tables.assetsTable.Name})
+		ctx.Export("DomainName", pocARecord.Name)
 
 		return nil
 	})

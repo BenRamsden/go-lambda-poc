@@ -7,7 +7,12 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
-func createLambda(ctx *pulumi.Context, name string, usersTable *dynamodb.Table, assetsTable *dynamodb.Table) (*lambda.Function, error) {
+type CreateLambdaArgs struct {
+	usersTable  *dynamodb.Table
+	assetsTable *dynamodb.Table
+}
+
+func createLambda(ctx *pulumi.Context, name string, args *CreateLambdaArgs) (*lambda.Function, error) {
 	// Create an IAM role.
 	role, err := iam.NewRole(ctx, name+"-task-exec-role", &iam.RoleArgs{
 		AssumeRolePolicy: pulumi.String(`{
@@ -64,7 +69,7 @@ func createLambda(ctx *pulumi.Context, name string, usersTable *dynamodb.Table, 
 					]
 				}
 			]
-		}`, assetsTable.Arn, usersTable.Arn),
+		}`, args.assetsTable.Arn, args.usersTable.Arn),
 	})
 
 	// Create the lambda using the args.
@@ -83,8 +88,8 @@ func createLambda(ctx *pulumi.Context, name string, usersTable *dynamodb.Table, 
 			},
 			Environment: lambda.FunctionEnvironmentArgs{
 				Variables: pulumi.StringMap{
-					"USERS_TABLE_NAME":  usersTable.Name,
-					"ASSETS_TABLE_NAME": assetsTable.Name,
+					"USERS_TABLE_NAME":  args.usersTable.Name,
+					"ASSETS_TABLE_NAME": args.assetsTable.Name,
 					"AUTH0_AUDIENCE":    pulumi.String("https://graphql.sandbox.jugo.io/graphql"),
 					"AUTH0_DOMAIN":      pulumi.String("https://auth.sandbox.jugo.io/"),
 					"GIN_MODE":          pulumi.String("release"),

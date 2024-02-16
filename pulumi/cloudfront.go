@@ -40,22 +40,30 @@ func createAPIOrderedCacheBehaviour(apiGwEndpointWithoutProtocol *pulumi.StringO
 	}
 }
 
-func createCloudfront(ctx *pulumi.Context, name string, bucket *s3.BucketV2, bucketOriginAccessIdentity *cloudfront.OriginAccessIdentity, apiGwEndpointWithoutProtocol *pulumi.StringOutput, apiGwStageName *pulumi.String) (*cloudfront.Distribution, error) {
-	OriginId := bucket.Arn
+type CreateCloudfrontArgs struct {
+	bucket                       *s3.BucketV2
+	bucketOriginAccessIdentity   *cloudfront.OriginAccessIdentity
+	apiGwEndpointWithoutProtocol *pulumi.StringOutput
+	apiGwStageName               *pulumi.String
+	acmCertArn                   pulumi.StringOutput
+}
+
+func createCloudfront(ctx *pulumi.Context, name string, args *CreateCloudfrontArgs) (*cloudfront.Distribution, error) {
+	OriginId := args.bucket.Arn
 
 	dist, err := cloudfront.NewDistribution(ctx, name+"-cf-dist", &cloudfront.DistributionArgs{
 		Origins: cloudfront.DistributionOriginArray{
 			&cloudfront.DistributionOriginArgs{
 				OriginId:   OriginId,
-				DomainName: bucket.BucketRegionalDomainName,
+				DomainName: args.bucket.BucketRegionalDomainName,
 				S3OriginConfig: cloudfront.DistributionOriginS3OriginConfigArgs{
-					OriginAccessIdentity: bucketOriginAccessIdentity.CloudfrontAccessIdentityPath,
+					OriginAccessIdentity: args.bucketOriginAccessIdentity.CloudfrontAccessIdentityPath,
 				},
 			},
 			&cloudfront.DistributionOriginArgs{
-				OriginId:   apiGwEndpointWithoutProtocol,
-				OriginPath: pulumi.Sprintf("/%s", apiGwStageName),
-				DomainName: apiGwEndpointWithoutProtocol,
+				OriginId:   args.apiGwEndpointWithoutProtocol,
+				OriginPath: pulumi.Sprintf("/%s", args.apiGwStageName),
+				DomainName: args.apiGwEndpointWithoutProtocol,
 				CustomOriginConfig: &cloudfront.DistributionOriginCustomOriginConfigArgs{
 					HttpPort:             pulumi.Int(80),
 					HttpsPort:            pulumi.Int(443),
@@ -102,8 +110,8 @@ func createCloudfront(ctx *pulumi.Context, name string, bucket *s3.BucketV2, buc
 			ViewerProtocolPolicy: pulumi.String("redirect-to-https"),
 		},
 		OrderedCacheBehaviors: cloudfront.DistributionOrderedCacheBehaviorArray{
-			createAPIOrderedCacheBehaviour(apiGwEndpointWithoutProtocol, pulumi.String("/graphql")),
-			createAPIOrderedCacheBehaviour(apiGwEndpointWithoutProtocol, pulumi.String("/playground")),
+			createAPIOrderedCacheBehaviour(args.apiGwEndpointWithoutProtocol, pulumi.String("/graphql")),
+			createAPIOrderedCacheBehaviour(args.apiGwEndpointWithoutProtocol, pulumi.String("/playground")),
 		},
 		PriceClass: pulumi.String("PriceClass_200"),
 		Restrictions: &cloudfront.DistributionRestrictionsArgs{
@@ -122,7 +130,8 @@ func createCloudfront(ctx *pulumi.Context, name string, bucket *s3.BucketV2, buc
 			},
 		},
 		ViewerCertificate: &cloudfront.DistributionViewerCertificateArgs{
-			CloudfrontDefaultCertificate: pulumi.Bool(true),
+			AcmCertificateArn: args.acmCertArn,
+			SslSupportMethod:  pulumi.String("sni-only"),
 		},
 	})
 

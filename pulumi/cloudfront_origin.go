@@ -6,7 +6,11 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
-func createBucketCloudfrontOrigin(ctx *pulumi.Context, name string, bucket *s3.BucketV2) (*cloudfront.OriginAccessIdentity, error) {
+type CreateBucketCloudfrontOriginArgs struct {
+	bucket *s3.BucketV2
+}
+
+func createBucketCloudfrontOrigin(ctx *pulumi.Context, name string, args *CreateBucketCloudfrontOriginArgs) (*cloudfront.OriginAccessIdentity, error) {
 	bucketOriginAccessIdentity, err := cloudfront.NewOriginAccessIdentity(ctx, name+"-identity", &cloudfront.OriginAccessIdentityArgs{
 		Comment: pulumi.String(name + "-identity"),
 	})
@@ -15,7 +19,7 @@ func createBucketCloudfrontOrigin(ctx *pulumi.Context, name string, bucket *s3.B
 	}
 
 	_, err = s3.NewBucketPolicy(ctx, name+"-policy", &s3.BucketPolicyArgs{
-		Bucket: bucket.ID(),
+		Bucket: args.bucket.ID(),
 		Policy: pulumi.Sprintf(`{
     "Version": "2012-10-17",
     "Statement": [
@@ -33,7 +37,7 @@ func createBucketCloudfrontOrigin(ctx *pulumi.Context, name string, bucket *s3.B
             ]
         }
     ]
-}`, bucketOriginAccessIdentity.IamArn, bucket.ID()),
+}`, bucketOriginAccessIdentity.IamArn, args.bucket.ID()),
 	})
 	if err != nil {
 		return nil, err

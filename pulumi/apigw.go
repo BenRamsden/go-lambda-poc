@@ -7,7 +7,11 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
-func createApiGW(ctx *pulumi.Context, name string, function *lambda.Function) (*pulumi.StringOutput, *pulumi.String, error) {
+type CreateApiGWArgs struct {
+	function *lambda.Function
+}
+
+func createApiGW(ctx *pulumi.Context, name string, args *CreateApiGWArgs) (*pulumi.StringOutput, *pulumi.String, error) {
 	account, err := aws.GetCallerIdentity(ctx, nil)
 	if err != nil {
 		return nil, nil, err
@@ -76,7 +80,7 @@ func createApiGW(ctx *pulumi.Context, name string, function *lambda.Function) (*
 		ResourceId:            apiresource.ID(),
 		RestApi:               gateway.ID(),
 		Type:                  pulumi.String("AWS_PROXY"),
-		Uri:                   function.InvokeArn,
+		Uri:                   args.function.InvokeArn,
 	})
 	if err != nil {
 		return nil, nil, err
@@ -86,7 +90,7 @@ func createApiGW(ctx *pulumi.Context, name string, function *lambda.Function) (*
 	// This is the final step and allows AWS API Gateway to communicate with the AWS Lambda function
 	permission, err := lambda.NewPermission(ctx, name+"-api-permission", &lambda.PermissionArgs{
 		Action:    pulumi.String("lambda:InvokeFunction"),
-		Function:  function.Name,
+		Function:  args.function.Name,
 		Principal: pulumi.String("apigateway.amazonaws.com"),
 		SourceArn: pulumi.Sprintf("arn:aws:execute-api:%s:%s:%s/*/*/*", region.Name, account.AccountId, gateway.ID()),
 	}, pulumi.DependsOn([]pulumi.Resource{apiresource}))
@@ -99,7 +103,7 @@ func createApiGW(ctx *pulumi.Context, name string, function *lambda.Function) (*
 		RestApi:          gateway.ID(),
 		StageDescription: pulumi.String("Production"),
 		StageName:        pulumi.String("prod"),
-	}, pulumi.DependsOn([]pulumi.Resource{apiresource, function, permission}))
+	}, pulumi.DependsOn([]pulumi.Resource{apiresource, args.function, permission}))
 	if err != nil {
 		return nil, nil, err
 	}
