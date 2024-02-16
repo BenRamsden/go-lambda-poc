@@ -90,9 +90,10 @@ func createLambda(ctx *pulumi.Context, name string, args *CreateLambdaArgs) (*la
 				Variables: pulumi.StringMap{
 					"USERS_TABLE_NAME":  args.usersTable.Name,
 					"ASSETS_TABLE_NAME": args.assetsTable.Name,
-					"AUTH0_AUDIENCE":    pulumi.String("https://graphql.sandbox.jugo.io/graphql"),
-					"AUTH0_DOMAIN":      pulumi.String("https://auth.sandbox.jugo.io/"),
-					"GIN_MODE":          pulumi.String("release"),
+					// TODO: change to https://graphql.sandbox.jugo.io/graphql
+					"AUTH0_AUDIENCE": pulumi.String("http://localhost:4000/graphql"),
+					"AUTH0_DOMAIN":   pulumi.String("https://auth.sandbox.jugo.io/"),
+					"GIN_MODE":       pulumi.String("release"),
 				},
 			},
 		},

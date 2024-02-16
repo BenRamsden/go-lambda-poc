@@ -10,13 +10,12 @@ import {
 } from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
 import {
-  Asset,
+  GetAssetsDocument,
   useCreateAssetMutation,
-  useGetAssetsLazyQuery,
+  useGetAssetsQuery,
 } from "@/components/gql/generated";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
 import { AssetView } from "@/components/assets/asset-view";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
@@ -39,7 +38,9 @@ const CreateAsset = () => {
           URI: "https://www.google.com",
         },
       },
-      refetchQueries: ["GetAssets"],
+      refetchQueries: [{
+        query: GetAssetsDocument,
+      }],
     });
   };
 
@@ -57,32 +58,11 @@ const CreateAsset = () => {
 };
 
 const Home = () => {
-  const [localAssets, setLocalAssets] = useState<Asset[]>([]);
-
-  const [fetchAssets, { data, loading: loadingAssets }] = useGetAssetsLazyQuery(
+  const { data: assetsData, refetch: refetchAssets } = useGetAssetsQuery(
     {
       fetchPolicy: "network-only",
     }
   );
-
-  useEffect(() => {
-    fetchAssets();
-  }, []);
-
-  useEffect(() => {
-    if (!loadingAssets && data?.assets)
-      setLocalAssets(
-        [...data.assets].sort(
-          (a, b) =>
-            new Date(b.CreatedAt).getTime() - new Date(a.CreatedAt).getTime()
-        )
-      );
-  }, [loadingAssets]);
-
-  const handleRefreshAssets = useCallback(() => {
-    setLocalAssets([]);
-    fetchAssets();
-  }, [fetchAssets]);
 
   return (
     <div>
@@ -129,19 +109,19 @@ const Home = () => {
           <CardHeader>
             <div className="flex flex-row justify-between items-center">
               <h1 className="font-bold">My Assets</h1>
-              <Button variant="outline" onClick={() => handleRefreshAssets()}>
+              <Button variant="outline" onClick={() => refetchAssets()}>
                 <RefreshCw />
               </Button>
             </div>
           </CardHeader>
           <CardContent>
             <ul className="list-none">
-              {!loadingAssets &&
-                localAssets.map((asset, index) => {
+              {assetsData &&
+                assetsData.assets.map((asset, index) => {
                   return (
                     <li key={asset.ID} className="mb-4">
                       <AssetView asset={asset} />
-                      {index !== localAssets.length - 1 && (
+                      {index !== assetsData.assets.length - 1 && (
                         <Separator className="my-4" />
                       )}
                     </li>

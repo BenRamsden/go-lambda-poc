@@ -27,7 +27,7 @@ package:
 		zip -j "bin/lambda/$$lambda/$$lambda.zip" "bin/lambda/$$lambda/bootstrap"; \
 	done
 	@echo "Building UI"
-	@cd ui && yarn package
+	@cd ui && yarn package --mode sandbox
 
 deploy:
 	cd pulumi && pulumi up -y

@@ -10,10 +10,11 @@ import { useAuth0 } from "@auth0/auth0-react";
 import { PropsWithChildren, useEffect } from "react";
 
 const API_AUDIENCE: string = import.meta.env.VITE_API_AUDIENCE;
+const API_URL: string = import.meta.env.VITE_API_URL;
 
 const CreateGraphqlClient = () => {
   const httpLink = new HttpLink({
-    uri: "http://localhost:4000/graphql",
+    uri: API_URL,
   });
 
   const authLink = setContext((_, { headers }) => {
