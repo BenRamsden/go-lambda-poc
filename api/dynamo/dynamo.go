@@ -63,7 +63,12 @@ func (repo *repository) GetAssets(ownerId string) ([]model.Asset, error) {
 		ExpressionAttributeNames:  expr.Names(),
 		ExpressionAttributeValues: expr.Values(),
 		KeyConditionExpression:    expr.KeyCondition(),
+		Limit:                     aws.Int32(20),
+		ScanIndexForward:          aws.Bool(false),
 	})
+
+	pageCount := 0
+	pageLimit := 1
 
 	for queryPaginator.HasMorePages() {
 		response, err = queryPaginator.NextPage(context.TODO())
@@ -79,6 +84,12 @@ func (repo *repository) GetAssets(ownerId string) ([]model.Asset, error) {
 		}
 
 		dbAssets = append(dbAssets, dbAssetsPage...)
+
+		// break if we've reached the page limit
+		pageCount++
+		if pageCount >= pageLimit {
+			break
+		}
 	}
 
 	assets := make([]model.Asset, len(dbAssets))

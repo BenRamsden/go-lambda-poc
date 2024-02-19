@@ -96,6 +96,7 @@ func createLambda(ctx *pulumi.Context, name string, args *CreateLambdaArgs) (*la
 					"GIN_MODE":       pulumi.String("release"),
 				},
 			},
+			Timeout: pulumi.Int(30),
 		},
 		pulumi.DependsOn([]pulumi.Resource{logPolicy, dynamoPolicy}),
 	)

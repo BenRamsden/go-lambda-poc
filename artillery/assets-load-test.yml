@@ -3,29 +3,49 @@ config:
   target: "https://02w3yjlc6f.execute-api.eu-west-1.amazonaws.com/prod"
   phases:
     - duration: 30
-      arrivalRate: 100
+      arrivalRate: 10
   http:
     defaults:
       headers:
         Authorization: "{{ $env.TOKEN }}"
 scenarios:
-  - name: "Get assets"
+  - name: "Put asset"
     flow:
       - post:
           url: "/graphql"
           json:
             query: |
-              query Assets {
-                assets {
+              mutation CreateAsset($input: NewAsset!) {
+                createAsset(input: $input) {
                   ID
                   Name
                   Description
                   URI
                   CreatedAt
                   UpdatedAt
+                  Owner
                 }
               }
-#          capture:
-#            - json: "$"
-#              as: "body"
-#      - log: "Response: {{ body }}"
+            variables:
+              input:
+                Name: "artillery-asset-name-{{ $randomString() }}"
+                Description: "artillery-asset-description-{{ $randomString() }}"
+                URI: "s3://artillery-fake-bucket/{{ $randomString() }}"
+  - name: "Get assets (x1000)"
+    flow:
+      - loop:
+          - post:
+              url: "/graphql"
+              json:
+                query: |
+                  query Assets {
+                    assets {
+                      ID
+                      Name
+                      Description
+                      URI
+                      CreatedAt
+                      UpdatedAt
+                    }
+                  }
+        count: 1000
