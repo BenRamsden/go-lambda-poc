@@ -43,12 +43,20 @@ func main() {
 			return err
 		}
 
-		function, err := createLambda(ctx, name, &CreateLambdaArgs{usersTable: tables.usersTable, assetsTable: tables.assetsTable, sentryDsn: pulumi.String(poc.Require("sentryDsn"))})
+		function, err := createLambda(ctx, name, &CreateLambdaArgs{
+			usersTable:    tables.usersTable,
+			assetsTable:   tables.assetsTable,
+			Runtime:       pulumi.String("provided.al2023"),
+			Code:          pulumi.NewFileArchive("../bin/lambda/api/api.zip"),
+			Architectures: pulumi.StringArray{pulumi.String("arm64")},
+			sentryDsn:     pulumi.String(poc.Require("sentryDsn")),
+		})
 		if err != nil {
 			return err
 		}
 
-		apiGwEndpointWithoutProtocol, apiGwStageName, err := createApiGW(ctx, name, &CreateApiGWArgs{function: function})
+		// TODO: Set tsFunction to typescript lambda function
+		apiGwEndpointWithoutProtocol, apiGwStageName, err := createApiGW(ctx, name, &CreateApiGWArgs{goFunction: function, tsFunction: function})
 		if err != nil {
 			return err
 		}

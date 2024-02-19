@@ -8,9 +8,12 @@ import (
 )
 
 type CreateLambdaArgs struct {
-	usersTable  *dynamodb.Table
-	assetsTable *dynamodb.Table
-	sentryDsn   pulumi.StringInput
+	usersTable    *dynamodb.Table
+	assetsTable   *dynamodb.Table
+	Runtime       pulumi.StringInput
+	Code          pulumi.ArchiveInput
+	Architectures pulumi.StringArrayInput
+	sentryDsn     pulumi.StringInput
 }
 
 func createLambda(ctx *pulumi.Context, name string, args *CreateLambdaArgs) (*lambda.Function, error) {
@@ -78,15 +81,12 @@ func createLambda(ctx *pulumi.Context, name string, args *CreateLambdaArgs) (*la
 		ctx,
 		name+"-lambda",
 		&lambda.FunctionArgs{
-			Name:    pulumi.String(name + "-lambda"),
-			Handler: pulumi.String("handler"),
-			Role:    role.Arn,
-			Runtime: pulumi.String("provided.al2023"),
-			Code:    pulumi.NewFileArchive("../bin/lambda/api/api.zip"),
-			// Arm64
-			Architectures: pulumi.StringArray{
-				pulumi.String("arm64"),
-			},
+			Name:          pulumi.String(name + "-lambda"),
+			Handler:       pulumi.String("handler"),
+			Role:          role.Arn,
+			Runtime:       args.Runtime,
+			Code:          args.Code,
+			Architectures: args.Architectures,
 			Environment: lambda.FunctionEnvironmentArgs{
 				Variables: pulumi.StringMap{
 					"USERS_TABLE_NAME":  args.usersTable.Name,
