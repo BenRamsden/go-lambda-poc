@@ -43,7 +43,13 @@ func main() {
 			return err
 		}
 
-		function, err := createLambda(ctx, name, &CreateLambdaArgs{usersTable: tables.usersTable, assetsTable: tables.assetsTable})
+		function, err := createLambda(ctx, name, &CreateLambdaArgs{
+			usersTable:    tables.usersTable,
+			assetsTable:   tables.assetsTable,
+			Runtime:       pulumi.String("provided.al2023"),
+			Code:          pulumi.NewFileArchive("../bin/lambda/api/api.zip"),
+			Architectures: pulumi.StringArray{pulumi.String("arm64")},
+		})
 		if err != nil {
 			return err
 		}
