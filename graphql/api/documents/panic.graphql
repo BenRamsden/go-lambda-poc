@@ -1,0 +1,8 @@
+query getPanic($message: String!) {
+  getPanic(message: $message)
+}
+
+mutation createPanic($message: String!) {
+  createPanic(message: $message)
+}
+

@@ -39,12 +39,18 @@ export type Me = {
 export type Mutation = {
   __typename?: 'Mutation';
   createAsset: Asset;
+  createPanic: Scalars['Boolean']['output'];
   empty?: Maybe<Scalars['Boolean']['output']>;
 };
 
 
 export type MutationCreateAssetArgs = {
   input: NewAsset;
+};
+
+
+export type MutationCreatePanicArgs = {
+  message: Scalars['String']['input'];
 };
 
 export type NewAsset = {
@@ -56,7 +62,13 @@ export type NewAsset = {
 export type Query = {
   __typename?: 'Query';
   assets: Array<Asset>;
+  getPanic: Scalars['Boolean']['output'];
   me: Me;
+};
+
+
+export type QueryGetPanicArgs = {
+  message: Scalars['String']['input'];
 };
 
 export type GetAssetsQueryVariables = Exact<{ [key: string]: never; }>;
@@ -70,6 +82,20 @@ export type CreateAssetMutationVariables = Exact<{
 
 
 export type CreateAssetMutation = { __typename?: 'Mutation', createAsset: { __typename?: 'Asset', ID: string, Owner: string, Name: string, Description: string, URI: string, CreatedAt: any, UpdatedAt: any } };
+
+export type GetPanicQueryVariables = Exact<{
+  message: Scalars['String']['input'];
+}>;
+
+
+export type GetPanicQuery = { __typename?: 'Query', getPanic: boolean };
+
+export type CreatePanicMutationVariables = Exact<{
+  message: Scalars['String']['input'];
+}>;
+
+
+export type CreatePanicMutation = { __typename?: 'Mutation', createPanic: boolean };
 
 
 export const GetAssetsDocument = gql`
@@ -156,3 +182,72 @@ export function useCreateAssetMutation(baseOptions?: Apollo.MutationHookOptions<
 export type CreateAssetMutationHookResult = ReturnType<typeof useCreateAssetMutation>;
 export type CreateAssetMutationResult = Apollo.MutationResult<CreateAssetMutation>;
 export type CreateAssetMutationOptions = Apollo.BaseMutationOptions<CreateAssetMutation, CreateAssetMutationVariables>;
+export const GetPanicDocument = gql`
+    query getPanic($message: String!) {
+  getPanic(message: $message)
+}
+    `;
+
+/**
+ * __useGetPanicQuery__
+ *
+ * To run a query within a React component, call `useGetPanicQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetPanicQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetPanicQuery({
+ *   variables: {
+ *      message: // value for 'message'
+ *   },
+ * });
+ */
+export function useGetPanicQuery(baseOptions: Apollo.QueryHookOptions<GetPanicQuery, GetPanicQueryVariables> & ({ variables: GetPanicQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetPanicQuery, GetPanicQueryVariables>(GetPanicDocument, options);
+      }
+export function useGetPanicLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetPanicQuery, GetPanicQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetPanicQuery, GetPanicQueryVariables>(GetPanicDocument, options);
+        }
+export function useGetPanicSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<GetPanicQuery, GetPanicQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetPanicQuery, GetPanicQueryVariables>(GetPanicDocument, options);
+        }
+export type GetPanicQueryHookResult = ReturnType<typeof useGetPanicQuery>;
+export type GetPanicLazyQueryHookResult = ReturnType<typeof useGetPanicLazyQuery>;
+export type GetPanicSuspenseQueryHookResult = ReturnType<typeof useGetPanicSuspenseQuery>;
+export type GetPanicQueryResult = Apollo.QueryResult<GetPanicQuery, GetPanicQueryVariables>;
+export const CreatePanicDocument = gql`
+    mutation createPanic($message: String!) {
+  createPanic(message: $message)
+}
+    `;
+export type CreatePanicMutationFn = Apollo.MutationFunction<CreatePanicMutation, CreatePanicMutationVariables>;
+
+/**
+ * __useCreatePanicMutation__
+ *
+ * To run a mutation, you first call `useCreatePanicMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreatePanicMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createPanicMutation, { data, loading, error }] = useCreatePanicMutation({
+ *   variables: {
+ *      message: // value for 'message'
+ *   },
+ * });
+ */
+export function useCreatePanicMutation(baseOptions?: Apollo.MutationHookOptions<CreatePanicMutation, CreatePanicMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreatePanicMutation, CreatePanicMutationVariables>(CreatePanicDocument, options);
+      }
+export type CreatePanicMutationHookResult = ReturnType<typeof useCreatePanicMutation>;
+export type CreatePanicMutationResult = Apollo.MutationResult<CreatePanicMutation>;
+export type CreatePanicMutationOptions = Apollo.BaseMutationOptions<CreatePanicMutation, CreatePanicMutationVariables>;

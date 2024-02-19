@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import Home from "./routes/home";
 import Login from "./routes/login";
 import ProtectedRoute from "./components/auth/protected-route";
+import { Toaster } from "sonner";
 
 const Routes = () => {
   const Router = useRoutes([
@@ -34,6 +35,7 @@ function App() {
           <BrowserRouter>
             <Routes />
           </BrowserRouter>
+          <Toaster />
         </AuthenticatedGraphqlProvider>
       </AuthProvider>
     </ThemeProvider>

@@ -43,7 +43,7 @@ func main() {
 			return err
 		}
 
-		function, err := createLambda(ctx, name, &CreateLambdaArgs{usersTable: tables.usersTable, assetsTable: tables.assetsTable})
+		function, err := createLambda(ctx, name, &CreateLambdaArgs{usersTable: tables.usersTable, assetsTable: tables.assetsTable, sentryDsn: pulumi.String(poc.Require("sentryDsn"))})
 		if err != nil {
 			return err
 		}
