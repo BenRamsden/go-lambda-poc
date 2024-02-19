@@ -14,6 +14,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.28.0
 	github.com/awslabs/aws-lambda-go-api-proxy v0.16.1
 	github.com/casbin/casbin/v2 v2.82.0
+	github.com/getsentry/sentry-go v0.27.0
 	github.com/gin-contrib/cors v1.5.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/google/uuid v1.5.0

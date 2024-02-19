@@ -1,0 +1,9 @@
+# We want to panic to trigger a sentry event
+
+extend type Query {
+  getPanic(message: String!): Boolean!
+}
+
+extend type Mutation {
+    createPanic(message: String!): Boolean!
+}

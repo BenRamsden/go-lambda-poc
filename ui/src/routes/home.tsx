@@ -1,6 +1,7 @@
 import Token from "@/components/auth/token";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import Header from "@/components/ui/header";
+import { toast } from "sonner";
 
 import {
   Accordion,
@@ -13,12 +14,49 @@ import {
   GetAssetsDocument,
   useCreateAssetMutation,
   useGetAssetsQuery,
+  useGetPanicLazyQuery,
 } from "@/components/gql/generated";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { AssetView } from "@/components/assets/asset-view";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
+
+const Extras = () => {
+  const [getPanic] = useGetPanicLazyQuery({
+    fetchPolicy: "network-only",
+    onError: () =>
+      toast("Query Paniced", {
+        description: "Sentry will capture this error",
+        action: {
+          label: "View",
+          onClick: () => {
+            open(
+              "https://jugo-digital-ltd.sentry.io/issues/?environment=sandbox&project=4506772933509120"
+            );
+          },
+        },
+      }),
+  });
+
+  return (
+    <div className="flex flex-row">
+      <Button
+        className="mr-4"
+        variant={"destructive"}
+        onClick={() => {
+          getPanic({
+            variables: {
+              message: "This is a panic message",
+            },
+          });
+        }}
+      >
+        Trigger Sentry Error
+      </Button>
+    </div>
+  );
+};
 
 const CreateAsset = () => {
   const [createAsset] = useCreateAssetMutation();
@@ -38,9 +76,11 @@ const CreateAsset = () => {
           URI: "https://www.google.com",
         },
       },
-      refetchQueries: [{
-        query: GetAssetsDocument,
-      }],
+      refetchQueries: [
+        {
+          query: GetAssetsDocument,
+        },
+      ],
     });
   };
 
@@ -58,11 +98,9 @@ const CreateAsset = () => {
 };
 
 const Home = () => {
-  const { data: assetsData, refetch: refetchAssets } = useGetAssetsQuery(
-    {
-      fetchPolicy: "network-only",
-    }
-  );
+  const { data: assetsData, refetch: refetchAssets } = useGetAssetsQuery({
+    fetchPolicy: "network-only",
+  });
 
   return (
     <div>
@@ -80,6 +118,23 @@ const Home = () => {
               <AccordionContent>
                 <CardContent>
                   <Token />
+                </CardContent>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </Card>
+
+        <Card className="mt-8">
+          <Accordion type="single" collapsible>
+            <AccordionItem value="item-extra">
+              <CardHeader>
+                <AccordionTrigger>
+                  <h1 className="font-bold">Extras</h1>
+                </AccordionTrigger>
+              </CardHeader>
+              <AccordionContent>
+                <CardContent>
+                  <Extras />
                 </CardContent>
               </AccordionContent>
             </AccordionItem>
