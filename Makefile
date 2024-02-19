@@ -11,7 +11,8 @@ init:
 	@cd ui && yarn install
 
 api:
-	go run cmd/api/local_main.go
+	go build -ldflags="-s -w"  -o bin/api ./cmd/api/local_main.go
+	./bin/api
 
 generate:
 	@echo "Generating Go code"
@@ -28,6 +29,10 @@ package:
 	done
 	@echo "Building UI"
 	@cd ui && yarn package --mode sandbox
+
+
+preview:
+	cd pulumi && pulumi preview
 
 deploy:
 	cd pulumi && pulumi up -y

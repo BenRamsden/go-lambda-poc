@@ -2,3 +2,4 @@ encryptionsalt: v1:MjBPl+D6eY8=:v1:KRbjGNvf66z0Vr4i:mNBQw2LIoh1Y7DI2rqmP7YEgSipS
 config:
   aws:region: eu-west-1
   jugo-go-lambda-poc:targetUrl: poc.sandbox.jugo.io
+  jugo-go-lambda-poc:sentryDsn: https://fafee773fd43f924eff949a2ce66d857@o1087996.ingest.sentry.io/4506772933509120

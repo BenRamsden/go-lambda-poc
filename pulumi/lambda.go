@@ -13,6 +13,7 @@ type CreateLambdaArgs struct {
 	Runtime       pulumi.StringInput
 	Code          pulumi.ArchiveInput
 	Architectures pulumi.StringArrayInput
+	sentryDsn     pulumi.StringInput
 }
 
 func createLambda(ctx *pulumi.Context, name string, args *CreateLambdaArgs) (*lambda.Function, error) {
@@ -91,9 +92,12 @@ func createLambda(ctx *pulumi.Context, name string, args *CreateLambdaArgs) (*la
 					"USERS_TABLE_NAME":  args.usersTable.Name,
 					"ASSETS_TABLE_NAME": args.assetsTable.Name,
 					// TODO: change to https://graphql.sandbox.jugo.io/graphql
-					"AUTH0_AUDIENCE": pulumi.String("http://localhost:4000/graphql"),
-					"AUTH0_DOMAIN":   pulumi.String("https://auth.sandbox.jugo.io/"),
-					"GIN_MODE":       pulumi.String("release"),
+					"AUTH0_AUDIENCE":     pulumi.String("http://localhost:4000/graphql"),
+					"AUTH0_DOMAIN":       pulumi.String("https://auth.sandbox.jugo.io/"),
+					"GIN_MODE":           pulumi.String("release"),
+					"SENTRY_DSN":         args.sentryDsn,
+					"SENTRY_ENVIRONMENT": pulumi.String("sandbox"),
+					"SENTRY_RELEASE":     pulumi.String("0.0.0"),
 				},
 			},
 			Timeout: pulumi.Int(30),

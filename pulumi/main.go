@@ -49,6 +49,7 @@ func main() {
 			Runtime:       pulumi.String("provided.al2023"),
 			Code:          pulumi.NewFileArchive("../bin/lambda/api/api.zip"),
 			Architectures: pulumi.StringArray{pulumi.String("arm64")},
+			sentryDsn:     pulumi.String(poc.Require("sentryDsn")),
 		})
 		if err != nil {
 			return err
