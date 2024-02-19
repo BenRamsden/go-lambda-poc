@@ -1,6 +1,7 @@
 package model
 
 import (
+	"context"
 	"time"
 
 	"github.com/jugo-io/go-poc/api/auth"
@@ -23,11 +24,11 @@ type Asset struct {
 }
 
 type AssetRepository interface {
-	CreateAsset(asset Asset) (Asset, error)
-	GetAssets(ownerId string) ([]Asset, error)
+	CreateAsset(ctx context.Context, asset Asset) (Asset, error)
+	GetAssets(ctx context.Context, owner string) ([]Asset, error)
 }
 
 type AssetService interface {
-	CreateAsset(auth auth.Auth, newAsset NewAsset) (Asset, error)
-	GetAssets(auth auth.Auth) ([]Asset, error)
+	CreateAsset(ctx context.Context, auth auth.Auth, newAsset NewAsset) (Asset, error)
+	GetAssets(ctx context.Context, auth auth.Auth) ([]Asset, error)
 }
