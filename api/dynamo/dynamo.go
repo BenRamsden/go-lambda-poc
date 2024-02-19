@@ -28,7 +28,7 @@ func New(client *dynamodb.Client) Repository {
 }
 
 // CreateAsset implements Repository.
-func (repo *repository) CreateAsset(asset model.Asset) (model.Asset, error) {
+func (repo *repository) CreateAsset(ctx context.Context, asset model.Asset) (model.Asset, error) {
 	dbAsset := AssetFromModel(asset)
 
 	item, err := attributevalue.MarshalMap(dbAsset)
@@ -38,7 +38,7 @@ func (repo *repository) CreateAsset(asset model.Asset) (model.Asset, error) {
 
 	fmt.Println(item)
 
-	_, err = repo.PutItem(context.TODO(), &dynamodb.PutItemInput{
+	_, err = repo.PutItem(ctx, &dynamodb.PutItemInput{
 		TableName: aws.String(assetsTableName),
 		Item:      item,
 	})
@@ -47,7 +47,7 @@ func (repo *repository) CreateAsset(asset model.Asset) (model.Asset, error) {
 }
 
 // GetAssets implements Repository.
-func (repo *repository) GetAssets(ownerId string) ([]model.Asset, error) {
+func (repo *repository) GetAssets(ctx context.Context, ownerId string) ([]model.Asset, error) {
 	var err error
 	var dbAssets []Asset
 	var response *dynamodb.QueryOutput
@@ -71,7 +71,7 @@ func (repo *repository) GetAssets(ownerId string) ([]model.Asset, error) {
 	pageLimit := 1
 
 	for queryPaginator.HasMorePages() {
-		response, err = queryPaginator.NextPage(context.TODO())
+		response, err = queryPaginator.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}

@@ -18,7 +18,7 @@ func (r *mutationResolver) CreateAsset(ctx context.Context, input NewAsset) (Ass
 		return Asset{}, err
 	}
 
-	asset, err := r.AssetService.CreateAsset(auth.Auth{ID: user.ID}, model.NewAsset{
+	asset, err := r.AssetService.CreateAsset(ctx, auth.Auth{ID: user.ID}, model.NewAsset{
 		Name:        input.Name,
 		Description: input.Description,
 		URI:         input.URI,
@@ -42,7 +42,7 @@ func (r *queryResolver) Assets(ctx context.Context) ([]Asset, error) {
 		return nil, err
 	}
 
-	assets, err := r.AssetService.GetAssets(auth.Auth{ID: user.ID})
+	assets, err := r.AssetService.GetAssets(ctx, auth.Auth{ID: user.ID})
 	if err != nil {
 		return nil, err
 	}

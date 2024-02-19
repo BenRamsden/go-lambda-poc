@@ -68,12 +68,28 @@ func createLambda(ctx *pulumi.Context, name string, args *CreateLambdaArgs) (*la
 						"dynamodb:Query"
 					],
 					"Resource": [
-						"%s",	
-						"%s"	
+						"%s",
+						"%s"
 					]
 				}
 			]
 		}`, args.assetsTable.Arn, args.usersTable.Arn),
+	})
+
+	xrayPolicy, err := iam.NewRolePolicy(ctx, name+"-lambda-xray-policy", &iam.RolePolicyArgs{
+		Role: role.Name,
+		Policy: pulumi.String(`{
+			"Version": "2012-10-17",
+			"Statement": [
+				{
+					"Effect": "Allow",
+					"Action": [
+						"xray:PutTraceSegments",
+						"xray:PutTelemetryRecords"
+					],
+					"Resource": "*"
+				}]
+			}`),
 	})
 
 	// Create the lambda using the args.
@@ -101,8 +117,14 @@ func createLambda(ctx *pulumi.Context, name string, args *CreateLambdaArgs) (*la
 				},
 			},
 			Timeout: pulumi.Int(30),
+			Layers: pulumi.StringArray{
+				pulumi.String("arn:aws:lambda:eu-west-1:901920570463:layer:aws-otel-collector-arm64-ver-0-90-1:1"),
+			},
+			TracingConfig: lambda.FunctionTracingConfigArgs{
+				Mode: pulumi.String("Active"),
+			},
 		},
-		pulumi.DependsOn([]pulumi.Resource{logPolicy, dynamoPolicy}),
+		pulumi.DependsOn([]pulumi.Resource{logPolicy, dynamoPolicy, xrayPolicy}),
 	)
 	if err != nil {
 		return nil, err
