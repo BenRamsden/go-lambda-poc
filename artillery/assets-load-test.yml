@@ -3,49 +3,49 @@ config:
   target: "https://02w3yjlc6f.execute-api.eu-west-1.amazonaws.com/prod"
   phases:
     - duration: 30
-      arrivalRate: 10
+      arrivalRate: 5000
   http:
     defaults:
       headers:
         Authorization: "{{ $env.TOKEN }}"
 scenarios:
-  - name: "Put asset"
+#  - name: "Put asset"
+#    flow:
+#      - post:
+#          url: "/graphql"
+#          json:
+#            query: |
+#              mutation CreateAsset($input: NewAsset!) {
+#                createAsset(input: $input) {
+#                  ID
+#                  Name
+#                  Description
+#                  URI
+#                  CreatedAt
+#                  UpdatedAt
+#                  Owner
+#                }
+#              }
+#            variables:
+#              input:
+#                Name: "artillery-asset-name-{{ $randomString() }}"
+#                Description: "artillery-asset-description-{{ $randomString() }}"
+#                URI: "s3://artillery-fake-bucket/{{ $randomString() }}"
+  - name: "Get assets"
     flow:
+#      - loop:
       - post:
           url: "/graphql"
           json:
             query: |
-              mutation CreateAsset($input: NewAsset!) {
-                createAsset(input: $input) {
+              query Assets {
+                assets {
                   ID
                   Name
                   Description
                   URI
                   CreatedAt
                   UpdatedAt
-                  Owner
                 }
               }
-            variables:
-              input:
-                Name: "artillery-asset-name-{{ $randomString() }}"
-                Description: "artillery-asset-description-{{ $randomString() }}"
-                URI: "s3://artillery-fake-bucket/{{ $randomString() }}"
-  - name: "Get assets (x1000)"
-    flow:
-      - loop:
-          - post:
-              url: "/graphql"
-              json:
-                query: |
-                  query Assets {
-                    assets {
-                      ID
-                      Name
-                      Description
-                      URI
-                      CreatedAt
-                      UpdatedAt
-                    }
-                  }
-        count: 1000
+#        count: 1000
