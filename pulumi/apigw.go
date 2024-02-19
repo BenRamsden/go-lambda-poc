@@ -8,7 +8,8 @@ import (
 )
 
 type CreateApiGWArgs struct {
-	function *lambda.Function
+	goFunction *lambda.Function
+	tsFunction *lambda.Function
 }
 
 func createApiGW(ctx *pulumi.Context, name string, args *CreateApiGWArgs) (*pulumi.StringOutput, *pulumi.String, error) {
@@ -50,50 +51,80 @@ func createApiGW(ctx *pulumi.Context, name string, args *CreateApiGWArgs) (*pulu
 		return nil, nil, err
 	}
 
-	// Add a resource to the API Gateway.
-	// This makes the API Gateway accept requests on "/{message}".
-	apiresource, err := apigateway.NewResource(ctx, name+"-api-gw-resource", &apigateway.ResourceArgs{
+	// Go Lambda API Resource
+	go_api_resource, err := apigateway.NewResource(ctx, name+"-api-gw-graphql-resource", &apigateway.ResourceArgs{
 		RestApi:  gateway.ID(),
-		PathPart: pulumi.String("{proxy+}"),
+		PathPart: pulumi.String("graphql"),
 		ParentId: gateway.RootResourceId,
 	})
 	if err != nil {
 		return nil, nil, err
 	}
-
-	// Add a method to the API Gateway.
-	_, err = apigateway.NewMethod(ctx, name+"-api-gw-any-method", &apigateway.MethodArgs{
+	_, err = apigateway.NewMethod(ctx, name+"-api-gw-graphql-any-method", &apigateway.MethodArgs{
 		HttpMethod:    pulumi.String("ANY"),
 		Authorization: pulumi.String("NONE"),
 		RestApi:       gateway.ID(),
-		ResourceId:    apiresource.ID(),
+		ResourceId:    go_api_resource.ID(),
 	})
 	if err != nil {
 		return nil, nil, err
 	}
-
-	// Add an integration to the API Gateway.
-	// This makes communication between the API Gateway and the Lambda function work
-	_, err = apigateway.NewIntegration(ctx, name+"-lambda-integration", &apigateway.IntegrationArgs{
+	_, err = apigateway.NewIntegration(ctx, name+"api-gw-graphql-any-method-lambda-integration", &apigateway.IntegrationArgs{
 		HttpMethod:            pulumi.String("ANY"),
-		IntegrationHttpMethod: pulumi.String("POST"),
-		ResourceId:            apiresource.ID(),
+		IntegrationHttpMethod: pulumi.String("ANY"),
+		ResourceId:            go_api_resource.ID(),
 		RestApi:               gateway.ID(),
 		Type:                  pulumi.String("AWS_PROXY"),
-		Uri:                   args.function.InvokeArn,
-	})
+		Uri:                   args.goFunction.InvokeArn,
+	}, pulumi.DependsOn([]pulumi.Resource{go_api_resource}))
+	if err != nil {
+		return nil, nil, err
+	}
+	_, err = lambda.NewPermission(ctx, name+"api-gw-graphql-api-permission", &lambda.PermissionArgs{
+		Action:    pulumi.String("lambda:InvokeFunction"),
+		Function:  args.goFunction.Name,
+		Principal: pulumi.String("apigateway.amazonaws.com"),
+		SourceArn: pulumi.Sprintf("arn:aws:execute-api:%s:%s:%s/*/*/*", region.Name, account.AccountId, gateway.ID()),
+	}, pulumi.DependsOn([]pulumi.Resource{go_api_resource}))
 	if err != nil {
 		return nil, nil, err
 	}
 
-	// Add a resource based policy to the Lambda function.
-	// This is the final step and allows AWS API Gateway to communicate with the AWS Lambda function
-	permission, err := lambda.NewPermission(ctx, name+"-api-permission", &lambda.PermissionArgs{
+	// TypeScript Lambda API Resource
+	ts_api_resource, err := apigateway.NewResource(ctx, name+"-api-gw-graphql2-resource", &apigateway.ResourceArgs{
+		RestApi:  gateway.ID(),
+		PathPart: pulumi.String("graphql2"),
+		ParentId: gateway.RootResourceId,
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	_, err = apigateway.NewMethod(ctx, name+"-api-gw-graphql2-any-method", &apigateway.MethodArgs{
+		HttpMethod:    pulumi.String("ANY"),
+		Authorization: pulumi.String("NONE"),
+		RestApi:       gateway.ID(),
+		ResourceId:    ts_api_resource.ID(),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	_, err = apigateway.NewIntegration(ctx, name+"api-gw-graphql2-any-method-lambda-integration", &apigateway.IntegrationArgs{
+		HttpMethod:            pulumi.String("ANY"),
+		IntegrationHttpMethod: pulumi.String("ANY"),
+		ResourceId:            ts_api_resource.ID(),
+		RestApi:               gateway.ID(),
+		Type:                  pulumi.String("AWS_PROXY"),
+		Uri:                   args.tsFunction.InvokeArn,
+	}, pulumi.DependsOn([]pulumi.Resource{ts_api_resource}))
+	if err != nil {
+		return nil, nil, err
+	}
+	_, err = lambda.NewPermission(ctx, name+"api-gw-graphql2-api-permission", &lambda.PermissionArgs{
 		Action:    pulumi.String("lambda:InvokeFunction"),
-		Function:  args.function.Name,
+		Function:  args.tsFunction.Name,
 		Principal: pulumi.String("apigateway.amazonaws.com"),
 		SourceArn: pulumi.Sprintf("arn:aws:execute-api:%s:%s:%s/*/*/*", region.Name, account.AccountId, gateway.ID()),
-	}, pulumi.DependsOn([]pulumi.Resource{apiresource}))
+	}, pulumi.DependsOn([]pulumi.Resource{ts_api_resource}))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -103,7 +134,7 @@ func createApiGW(ctx *pulumi.Context, name string, args *CreateApiGWArgs) (*pulu
 		RestApi:          gateway.ID(),
 		StageDescription: pulumi.String("Production"),
 		StageName:        pulumi.String("prod"),
-	}, pulumi.DependsOn([]pulumi.Resource{apiresource, args.function, permission}))
+	}, pulumi.DependsOn([]pulumi.Resource{go_api_resource, ts_api_resource}))
 	if err != nil {
 		return nil, nil, err
 	}

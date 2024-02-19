@@ -55,7 +55,8 @@ func main() {
 			return err
 		}
 
-		apiGwEndpointWithoutProtocol, apiGwStageName, err := createApiGW(ctx, name, &CreateApiGWArgs{function: function})
+		// TODO: Set tsFunction to typescript lambda function
+		apiGwEndpointWithoutProtocol, apiGwStageName, err := createApiGW(ctx, name, &CreateApiGWArgs{goFunction: function, tsFunction: function})
 		if err != nil {
 			return err
 		}
