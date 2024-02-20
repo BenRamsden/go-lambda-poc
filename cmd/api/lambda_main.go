@@ -4,6 +4,8 @@ package main
 
 import (
 	"context"
+	"log"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/aws/aws-lambda-go/events"
@@ -16,7 +18,6 @@ import (
 	"github.com/jugo-io/go-poc/api/graph"
 	"github.com/jugo-io/go-poc/api/service"
 	"github.com/vektah/gqlparser/v2/gqlerror"
-	"log"
 )
 
 var ginLambda *ginadapter.GinLambda
