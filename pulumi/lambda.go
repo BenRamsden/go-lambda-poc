@@ -117,9 +117,6 @@ func createLambda(ctx *pulumi.Context, name string, args *CreateLambdaArgs) (*la
 				},
 			},
 			Timeout: pulumi.Int(30),
-			Layers: pulumi.StringArray{
-				pulumi.String("arn:aws:lambda:eu-west-1:901920570463:layer:aws-otel-collector-arm64-ver-0-90-1:1"),
-			},
 			TracingConfig: lambda.FunctionTracingConfigArgs{
 				Mode: pulumi.String("Active"),
 			},
