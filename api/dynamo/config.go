@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	"go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws"
+	"github.com/aws/aws-xray-sdk-go/instrumentation/awsv2"
 )
 
 var (
@@ -61,7 +61,8 @@ func NewFromEnv() Repository {
 		log.Fatalf("unable to load SDK config, %v", err)
 	}
 
-	otelaws.AppendMiddlewares(&cfg.APIOptions)
+	awsv2.AWSV2Instrumentor(&cfg.APIOptions)
+	
 	// Using the Config value, create the DynamoDB client
 	svc := dynamodb.NewFromConfig(cfg)
 

@@ -22,10 +22,6 @@ import (
 	"github.com/jugo-io/go-poc/api/graph"
 	"github.com/jugo-io/go-poc/api/service"
 	"github.com/vektah/gqlparser/v2/gqlerror"
-	"go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-lambda-go/otellambda"
-	"go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-lambda-go/otellambda/xrayconfig"
-	"go.opentelemetry.io/contrib/propagators/aws/xray"
-	"go.opentelemetry.io/otel"
 )
 
 var ginLambda *ginadapter.GinLambda
@@ -79,21 +75,5 @@ func Handler(ctx context.Context, req events.APIGatewayProxyRequest) (events.API
 }
 
 func main() {
-	ctx := context.Background()
-	tp, err := xrayconfig.NewTracerProvider(ctx)
-	if err != nil {
-		log.Printf("failed to create tracer provider: %v", err)
-	}
-
-	defer func(ctx context.Context) {
-		err := tp.Shutdown(ctx)
-		if err != nil {
-			log.Printf("failed to shutdown TracerProvider: %v", err)
-		}
-	}(ctx)
-
-	otel.SetTracerProvider(tp)
-	otel.SetTextMapPropagator(xray.Propagator{})
-
-	lambda.Start(otellambda.InstrumentHandler(Handler, xrayconfig.WithRecommendedOptions(tp)...))
+	lambda.Start(Handler)
 }
