@@ -18,12 +18,19 @@ jobs:
 
       - name: Display Go version
         run: go version
-      
+
       - name: Get dependencies
         run: go mod download
 
       - name: Build
         run: GOARCH=arm64 GOOS=linux go build -ldflags="-s -w" -o bin/lambda/api/bootstrap cmd/api/lambda_main.go
 
+      - name: Compose Up
+        run: docker-compose up -d --build
+
       - name: Test
         run: go test ./...
+
+      - name: Compose Down
+        run: docker-compose down --remove-orphans
+

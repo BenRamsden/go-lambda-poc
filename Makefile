@@ -36,3 +36,9 @@ preview:
 
 deploy:
 	cd pulumi && pulumi up -y
+
+test:
+	docker-compose up -d --build
+	go clean -testcache
+	go test ./...
+	docker-compose down --remove-orphans
