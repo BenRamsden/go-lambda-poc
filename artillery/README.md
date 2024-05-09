@@ -1,4 +1,4 @@
-# jugo-go-lambda-poc load test
+# go-lambda-poc load test
 
 ## Install
 

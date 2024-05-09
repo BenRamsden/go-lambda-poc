@@ -1,0 +1,13 @@
+# ./.tmuxinator.yml
+
+name: go-lambda-poc
+root: ./
+
+windows:
+  - editor:
+      layout: even-horizontal
+      panes:
+        -
+        - make ui
+        - make api
+        - make db

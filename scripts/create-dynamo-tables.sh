@@ -29,5 +29,5 @@ CreateGenericDynamoDBTable() {
           
 }
 
-CreateGenericDynamoDBTable "jugo-go-lambda-poc-assets"
-CreateGenericDynamoDBTable "jugo-go-lambda-poc-users"
+CreateGenericDynamoDBTable "go-lambda-poc-assets"
+CreateGenericDynamoDBTable "go-lambda-poc-users"

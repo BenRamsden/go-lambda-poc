@@ -15,7 +15,7 @@ import (
 )
 
 func defaultTables() tables {
-	var assetsTableName string = "jugo-go-lambda-poc-assets"
+	var assetsTableName string = "go-lambda-poc-assets"
 	envAssetsTableName := os.Getenv("ASSETS_TABLE_NAME")
 	if envAssetsTableName != "" {
 		assetsTableName = envAssetsTableName

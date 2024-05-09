@@ -7,7 +7,7 @@ import (
 
 func main() {
 	pulumi.Run(func(ctx *pulumi.Context) error {
-		name := "jugo-go-lambda-poc"
+		name := "go-lambda-poc"
 
 		// Stack reference to jugo-sandbox-base
 		base, err := pulumi.NewStackReference(ctx, "jugo-sandbox-base", nil)
@@ -17,7 +17,7 @@ func main() {
 		cloudFrontAcmCertArn := base.GetStringOutput(pulumi.String("cloudFrontAcmCertArn"))
 		hostedZoneId := base.GetStringOutput(pulumi.String("zoneId"))
 
-		poc := config.New(ctx, "jugo-go-lambda-poc")
+		poc := config.New(ctx, "go-lambda-poc")
 		if err != nil {
 			return err
 		}

@@ -1,4 +1,4 @@
-module jugo-go-lambda-poc
+module go-lambda-poc
 
 go 1.21
 
