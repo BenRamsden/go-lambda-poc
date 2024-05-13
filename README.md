@@ -19,7 +19,7 @@ make init
 
 # Run Locally
 
-> :warning: TODO: Make DynamoDB tables creation part of the `make dev` process
+> :warning: TODO: Make DynamoDB tables creation part of the `make start` process
 
 ```shell
 make start
